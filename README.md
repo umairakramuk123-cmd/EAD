@@ -6,6 +6,8 @@ foreign-funded development projects.
 
 Built to BRD v1.1 (`EAD- Updated BRD 1.1`).
 
+**v2 — glassmorphism design system, light/dark themes, and a fully redesigned login screen.**
+
 **Open [`ead-portal.html`](ead-portal.html) directly in any browser.** There is nothing to install,
 build or serve.
 
@@ -20,7 +22,7 @@ networks that block CDNs — which matters for government deployments behind res
 | | |
 |---|---|
 | File | `ead-portal.html` |
-| Size | ~971 KB |
+| Size | ~999 KB |
 | External requests | 0 |
 | Font | Manrope only, 400/500/600/700/800 |
 | Type scale | Hard-constrained to 13–16 px (13 / 14 / 15 / 16 only) |
@@ -38,6 +40,84 @@ federal system rather than a commercial SaaS product.
 
 Because the type scale is capped at 16 px, hierarchy is carried by **weight, colour and spacing**
 rather than size — a deliberately dense, record-room-grade information design.
+
+## Design system v2 — glassmorphism + dual theme
+
+Every surface in the portal is now a **frosted-glass panel**: a translucent background, a
+`backdrop-filter: blur(22px) saturate(180%)` refraction of what sits behind it, a 1 px top highlight
+and a deep soft shadow. Glass only reads as glass if there is something to refract, so the page
+carries a fixed **ambient aurora mesh** — four large radial gradients drifting behind the content —
+plus a barely-visible SVG `feTurbulence` grain layer to stop the flat colour bands that blur produces.
+Both layers are `position:fixed` at negative z-index and are switched off in `@media print`.
+
+### Themes
+
+Light and dark are **first-class**, not an inverted afterimage. Two complete token sets live on
+`:root` and `[data-theme="dark"]`, so every colour in the app resolves through a variable:
+
+| | |
+|---|---|
+| Toggle | `.thm` button on the login screen **and** in the app top bar |
+| Default | the visitor's `prefers-color-scheme`, then overridden by an explicit choice |
+| Persistence | `localStorage['ead-portal-theme']` |
+| Live sync | follows the OS setting until the visitor picks manually |
+| Browser chrome | `<meta name="theme-color">` updates with the theme |
+| Charts | ApexCharts palette, axis, grid, tooltip and heatmap/treemap scales re-derive on switch |
+
+Switching theme calls `App.refreshCharts()`, which destroys and rebuilds only the charts on the
+current view — no page reload, no lost scroll position, no re-render of the DOM.
+`color-scheme` is declared per theme so native form controls, scrollbars and the date picker match.
+
+Dark mode uses raised greens and a warmer gold (`#4FBC97` / `#E3BB5C`) rather than the light theme's
+deep institutional greens, keeping WCAG-style contrast against the near-black `#070F0C` canvas.
+
+### Icon contract
+
+Icons were previously emitted as bare `<svg>` elements; any container without an explicit sizing rule
+fell back to the replaced-element default of **300 × 150 px**, which is what made some icons appear
+enormous. Every generated icon now carries the class `ic` from the `I()` helper, and
+`.ic { width:16px; height:16px; flex:none }` provides a safe default. **35 distinct contexts**
+override that default to the size their container actually needs — 9 px in a timeline node, 12 px in
+a status pill, 13 px in a link, 14 px in a chevron, 17 px in the sidebar, 18 px in a KPI tile,
+22 px in a large icon chip, 26 px in an empty state. A sweep across every view confirms the only
+rendered icon sizes are **13, 14, 15, 16, 17, 18, 19 and 24 px**.
+
+The global `svg` rule deliberately sets only `display:block`. It must **not** set a width, because
+ApexCharts sizes its own `<svg class="apexcharts-svg">` with attributes and a CSS width would
+destroy every chart on the page.
+
+### Login screen
+
+Completely rebuilt as a **single-viewport, zero-scroll** composition:
+
+- three blurred aurora orbs drifting behind a frosted two-pane card
+- left pane: dark-green glass brand panel with an eyebrow label, a live-pulse trust line and three
+  portal metrics
+- right pane: the sign-in form with a segmented Email / CNIC / Tracking-ID switcher, iconified
+  inputs, inline CAPTCHA and a full-width submit
+- 56 px brand bar with the theme toggle, and a slim centred legal footer
+
+**No vertical scroll is guaranteed structurally, not by luck.** `<html data-screen="login">` sets
+`height:100dvh; overflow:hidden` on both `html` and `body`, so the *document* cannot scroll while the
+login screen is up; `.lg-wrap` is `100dvh` with `overflow:hidden`; and the card is capped at
+`calc(100dvh - 108px)`. Three progressive media steps then trim the form as the viewport shortens —
+drop the lead line and tighten spacing at ≤ 780 px tall, hide the brand metrics at ≤ 700 px, hide the
+divider at ≤ 680 px, and compact every control at ≤ 620 px.
+
+The height budget was computed from the shipped CSS rather than eyeballed:
+
+| Viewport height | Form content | Available | Result |
+|---|---|---|---|
+| 1080 px | 630 px | 972 px | fits |
+| 900 px (1440 × 900) | 630 px | 792 px | fits |
+| 800 px (1280 × 800) | 630 px | 692 px | fits |
+| 768 px (1366 × 768 / 1024 × 768) | 580 px | 660 px | fits |
+| 700 px | 580 px | 604 px | fits |
+| 640 px | 533 px | 544 px | fits |
+| 600 px | 489 px | 504 px | fits |
+
+Below 980 px wide the card collapses to a single column and the brand pane is hidden, so phones get
+the form only.
 
 ## Roles (13)
 
@@ -96,4 +176,12 @@ selects which workspace you enter.
 Validated headlessly: 129 role × view renders, all 50 chart builders producing well-formed configs
 (with Manrope enforced on chart, axis, legend and tooltip text), every modal, auth flow, filter,
 sort, pagination and tab — **0 errors**. Tag balance and structural integrity verified on the
-markup; computed font sizes swept across 1,669 rendered elements with **0 values outside 13–16 px**.
+markup; computed font sizes swept across 1,661 rendered elements with **0 values outside 13–16 px**.
+
+v2 added: theme flip / persist / restore, palette re-derivation into the dark series, `App.refreshCharts()`
+on every theme switch, a full 129-view render pass **in dark mode**, an `.ic` sizing audit over every
+SVG in every view, the new login structure, and the login height budget above (13 viewport heights,
+all fitting without a scrollbar). **0 errors, 0 warnings.**
+
+`scripts/height.py` reproduces the height budget by parsing the stylesheet that ships in the HTML,
+so the no-scroll claim can be re-checked after any CSS edit.
