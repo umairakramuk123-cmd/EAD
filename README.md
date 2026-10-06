@@ -8,6 +8,8 @@ Built to BRD v1.1 (`EAD- Updated BRD 1.1`).
 
 **v2 — glassmorphism design system, light/dark themes, and a fully redesigned login screen.**
 
+**v3 — floating icon-rail sidebar, command palette (⌘K), and a geometrically-proven no-overlap shell.**
+
 **Open [`ead-portal.html`](ead-portal.html) directly in any browser.** There is nothing to install,
 build or serve.
 
@@ -22,7 +24,7 @@ networks that block CDNs — which matters for government deployments behind res
 | | |
 |---|---|
 | File | `ead-portal.html` |
-| Size | ~1.0 MB |
+| Size | ~1.02 MB |
 | External requests | 0 |
 | Font | Manrope only, 400/500/600/700/800 |
 | Type scale | Hard-constrained to 13–16 px (13 / 14 / 15 / 16 only) |
@@ -125,6 +127,66 @@ with `overflow:hidden` so its height is constant and it can never grow the chrom
 Below 980 px wide the card collapses to a single column and the brand pane is hidden, so phones get
 the form only.
 
+## Design system v3 — floating rail, command palette, zero overlap
+
+### Sidebar
+
+The sidebar is no longer a full-height slab bolted to the left edge. It is a **detached, rounded glass
+rail** floating `14px` in from the top, bottom and left, with its own interior light (a green bloom
+top-left, a gold ember bottom-right), a hairline specular edge, and a deep cast shadow.
+
+It now carries, top to bottom: the brand crest, a **role-aware gold quick-action button**
+("New MoU application" for EAD staff, "Continue application" for NGOs, "Review clearance requests"
+for MoI, "Upload audited accounts" for auditors, and so on), the grouped module nav, a live system
+status line, the identity card, and a **collapse control**.
+
+**Icon-rail mode** — the collapse button shrinks the rail to 78px, keeping only icons, badges and the
+avatar, with native tooltips on every item. The preference persists in
+`localStorage['ead-portal-rail']` and is restored on sign-in. Charts are told to re-measure after the
+width transition settles, so nothing is left stretched. Below 1080px the rail becomes a slide-in
+drawer with a blurred backdrop and rail mode is switched off automatically.
+
+Active items get a gradient pill, a gold icon and an animated gold capsule marker that scales in.
+
+### Command palette
+
+`⌘K` / `Ctrl+K` / `/` opens a full command palette — the single biggest interaction upgrade:
+
+- **Commands** — toggle theme, collapse the sidebar, change financial year, re-sync data, print, help, sign out
+- **Modules** — every module the *current role* is actually permitted to open, with its description
+- **Records** — NGOs, MoU applications, MoUs, projects and clearance requests, each **deep-linking
+  straight into its detail view** rather than just navigating to the module
+
+Ranking is scored (exact › prefix › word-start › substring › subsequence, length- and position-weighted),
+results are grouped and capped, and the whole thing is keyboard-driven: `↑`/`↓`/`Tab` to move,
+`↵` to run, `Esc` to dismiss. Record groups only appear for roles that may see them.
+
+### Nothing overlaps — proved, not assumed
+
+No browser exists in this sandbox, so `scripts/overlap-audit.py` proves the layout **geometrically**
+by parsing the stylesheet that actually ships and rebuilding the box model of every fixed, sticky and
+absolutely-positioned layer. It also asserts that each rule it models is still present, so editing the
+CSS without updating the model fails loudly instead of passing a stale claim. **49 checks, 0 failures:**
+
+| Area | What is proved |
+|---|---|
+| Gutter | sidebar right edge 280px vs content left edge 294px (14px clear); rail 92px vs 106px |
+| Drawer | below 1080px the content margin is released to 0 and the rail parks fully off-screen |
+| Topbar | minimum content width fits its column at **every** width from 320px to 1920px, across 16 breakpoints |
+| Shrink | crumb, command trigger and role picker all carry `min-width:0`, so the row compresses instead of overflowing |
+| z-index | one contract, no two shell layers share a level: ambient −2/−1 · sticky head 3 · topbar 70 · backdrop 79 · sidebar 80 · modal 200 · drawer 201 · **palette 250** · context menu 300 · toasts 400 |
+| Sticky | the sticky table head offsets by `var(--tb-h)` so it can never slide under the sticky topbar |
+| Overlays | dropdowns, modal, drawer, palette and toasts are all viewport-clamped; on phones menus anchor right |
+| Dark mode | no hardcoded light *surface* survives (luminance-tested; badges, control knobs and print excluded) |
+| Type scale | every literal `font-size`, every `--fs-*` token and every ApexCharts `fontSize` is within 13–16px |
+
+Bugs this audit found and that are now fixed: the topbar's dropdowns were trapped inside the topbar's
+own stacking context (`z-index:50`) so the sidebar could paint over them; the app footer, a view card
+and the context menu used hardcoded light backgrounds that stayed white in dark mode; four dropdowns
+had inline `min-width` values that could exceed a 320px viewport; a `font-size:0` text-hiding hack in
+rail mode registered as a type-scale violation; and a `22px` login heading override broke the 13–16px
+constraint.
+
 ## Roles (13)
 
 Every role has its own sidebar, dashboard, KPI set and write permissions. Switch between them live
@@ -189,5 +251,12 @@ on every theme switch, a full 129-view render pass **in dark mode**, an `.ic` si
 SVG in every view, the new login structure, and the login height budget above (13 viewport heights,
 all fitting without a scrollbar). **0 errors, 0 warnings.**
 
-`scripts/height.py` reproduces the height budget by parsing the stylesheet that ships in the HTML,
-so the no-scroll claim can be re-checked after any CSS edit.
+`scripts/login-height-budget.py` reproduces the height budget by parsing the stylesheet that ships in
+the HTML, so the no-scroll claim can be re-checked after any CSS edit.
+
+v3 added: 15 shell tests (rail sidebar structure, topbar structure, tooltips, rail persistence, the
+role-aware quick action across all 13 roles, palette structure, per-role module permission filtering,
+search ranking, keyboard navigation, module navigation, record deep-linking, command execution and
+Escape precedence), plus `scripts/overlap-audit.py` (49 geometric checks) and
+`scripts/markup-balance.py` (tag balance, duplicate IDs, structural assertions). All suites report
+**0 errors, 0 warnings, 0 failures**.

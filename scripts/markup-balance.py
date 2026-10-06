@@ -32,7 +32,7 @@ b=stripped
 checks=[
  ("exactly one <html>", b.count('<html')==1),
  ("exactly one <body>", b.count('<body')==1),
- ("exactly one <head>", b.count('<head')==1),
+ ("exactly one <head>", b.count("<head>")==1 and b.count("</head>")==1),
  ("#auth before #app", b.index('id="auth"')<b.index('id="app"')),
  ("icon sprite present", '<svg xmlns="http://www.w3.org/2000/svg" style="display:none"' in b),
  ("#view mount point", 'id="view"' in b),
