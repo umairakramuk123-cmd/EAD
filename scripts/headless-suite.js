@@ -1,11 +1,29 @@
 const fs=require('fs');const {JSDOM}=require('jsdom');
 const html=fs.readFileSync('/home/user/EAD/ead-portal.html','utf8');
 const errors=[], warns=[];
+/* ApexCharts cannot render in jsdom at all (no layout, no getBBox, no screenCTM),
+   and its render() rejects from inside a nested promise that escapes any synchronous
+   try/catch -- which under Node 22 aborts the process. So the suite validates chart
+   *configurations* against this stub instead of pixels. The vendored library overwrites
+   window.ApexCharts when it executes, hence the re-install inside the test callback. */
+const MockApex=class{
+  constructor(el,o){
+    if(!el)throw new Error('chart: no element');
+    if(!o)throw new Error('chart: no options');
+    this.el=el;this.o=o;this.w={globals:{dom:{ID:el.id}}};
+  }
+  render(){this.rendered=true;return Promise.resolve(this)}
+  destroy(){this.destroyed=true}
+};
 const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'http://localhost/',
   beforeParse(w){
-    w.ApexCharts=class{constructor(el,o){if(!el)throw new Error('chart: no element');if(!o)throw new Error('chart: no options');
-      this.o=o;this.w={globals:{dom:{ID:el.id}}};}render(){this.rendered=true}destroy(){}};
+    w.ApexCharts=MockApex;
     w.Element.prototype.scrollIntoView=function(){};
+    /* jsdom has no ResizeObserver; ApexCharts uses it for redrawOnParentResize */
+    w.ResizeObserver=class{constructor(cb){this.cb=cb}observe(){}unobserve(){}disconnect(){}};
+    w.requestAnimationFrame=w.requestAnimationFrame||(cb=>setTimeout(()=>cb(Date.now()),16));
+    /* an unhandled rejection would otherwise escape the synchronous try/catch */
+    w.addEventListener('unhandledrejection',e=>warns.push('unhandled rejection: '+String(e.reason).slice(0,140)));
     w.print=function(){};
     w.addEventListener('error',e=>errors.push('WINDOW ERROR: '+(e.error&&e.error.stack||e.message)));
     const oe=w.console.error, ow=w.console.warn;
@@ -15,9 +33,15 @@ const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'h
 const w=dom.window, d=w.document;
 const ev=x=>w.eval(x);
 const W=new Proxy({},{get:(t,k)=>ev(String(k))});
-setTimeout(()=>{
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+setTimeout(async()=>{
   try{
+    w.ApexCharts=MockApex;   // the vendored UMD library replaced it during page load
     const t=(name,fn)=>{try{fn();console.log('  ok   '+name)}catch(e){errors.push(name+' :: '+e.message+'\n'+(e.stack||'').split('\n')[1])}};
+    /* App.nav() defers chart/sparkline/tool mounting to requestAnimationFrame,
+       so tests that assert post-render work must let a frame elapse first. */
+    const ta=async(name,fn)=>{try{await fn();console.log('  ok   '+name)}catch(e){errors.push(name+' :: '+e.message+'\n'+(e.stack||'').split('\n')[1])}};
+    const go=async v=>{W.App.nav(v);await sleep(60)};
     console.log('== BOOT ==');
     t('login screen visible',()=>{if(!d.getElementById('a-login')||d.getElementById('a-login').classList.contains('hidden'))throw new Error('login hidden');
       if(d.getElementById('auth').classList.contains('on')!==true)throw new Error('auth not shown');
@@ -258,7 +282,183 @@ setTimeout(()=>{
     if(missing.length)errors.push('CHART IDS RENDERED BUT UNDEFINED: '+missing.join(', '));
     if(unusedDefs.length)warns.push('defined but never mounted: '+unusedDefs.join(', '));
 
+    console.log('== KPI SPARKLINES + COUNT-UP ==');
+    t('sparkSeries is deterministic and bounded',()=>{
+      const a=W.sparkSeries('Total Cases',12,12), b=W.sparkSeries('Total Cases',12,12);
+      if(a.join()!==b.join())throw new Error('not stable across calls');
+      if(a.length!==12)throw new Error('wrong length '+a.length);
+      if(a.some(v=>!isFinite(v)||v<0))throw new Error('bad value in '+a.join());
+      if(W.sparkSeries('Other',12,12).join()===a.join())throw new Error('seed ignored');
+      const up=W.sparkSeries('X',40,12), dn=W.sparkSeries('X',-40,12);
+      if(up[11]<=up[0])throw new Error('positive delta did not trend up');
+      if(dn[11]>=dn[0])throw new Error('negative delta did not trend down')});
+    await ta('every KPI tile carries a mounted sparkline',async()=>{W.App.enter('super_admin');await go('dashboard');
+      const kpis=[...d.querySelectorAll('#view .kpi')];
+      if(!kpis.length)throw new Error('no KPI tiles on the dashboard');
+      const sp=[...d.querySelectorAll('#view .kpi-spark[data-spark]')];
+      if(sp.length!==kpis.length)throw new Error(kpis.length+' tiles but '+sp.length+' sparklines');
+      sp.forEach(el=>{const pts=el.dataset.spark.split(',').map(Number);
+        if(pts.length!==12||pts.some(v=>!isFinite(v)))throw new Error('bad spark data '+el.dataset.spark);
+        if(el.dataset.done!=='1')throw new Error('sparkline not marked mounted')});
+      if(!d.querySelector('#view .kpi[data-tone]'))throw new Error('tile lost its tone for colouring');
+      if(W.App.charts.length<kpis.length)throw new Error('sparkline instances not tracked for teardown')});
+    await ta('sparklines re-mount after a theme switch',async()=>{
+      const before=d.querySelectorAll('#view .kpi-spark[data-done]').length;
+      W.App.refreshCharts(); await sleep(60);
+      const after=d.querySelectorAll('#view .kpi-spark[data-done]').length;
+      if(!after||after<before)throw new Error('sparklines not remounted ('+before+' -> '+after+')');
+      W.Theme.set('light',true)});
+    await ta('numeric KPI values get a counter, text values are left alone',async()=>{await go('dashboard');
+      const kv=[...d.querySelectorAll('#view .kpi-val .kv[data-count]')];
+      if(!kv.length)throw new Error('no countable values found');
+      kv.forEach(el=>{if(!/^\d+$/.test(el.dataset.count))throw new Error('bad data-count '+el.dataset.count);
+        if(el.dataset.counted!=='1')throw new Error('count-up did not run');
+        if(!/^[\d,]+$/.test(el.textContent.trim()))throw new Error('counter left non-numeric text: '+el.textContent)});
+      [...d.querySelectorAll('#view .kpi-val')].forEach(el=>{
+        if(!el.querySelector('.kv')&&!/[A-Za-z$%]/.test(el.textContent))
+          throw new Error('unhandled numeric value without a counter: '+el.textContent)})});
+    await ta('count-up is idempotent and honours reduced motion',async()=>{await go('dashboard');
+      const kv=d.querySelector('#view .kv[data-count]');
+      const target=kv.dataset.count;
+      kv.dataset.counted='';delete kv.dataset.counted;
+      W.Spark.count(d.getElementById('view'));
+      if(kv.dataset.counted!=='1')throw new Error('re-run did not mark the element');
+      await sleep(900);
+      if(kv.textContent.replace(/,/g,'')!==target)
+        throw new Error('counter did not settle on '+target+', got '+kv.textContent)});
+
+    console.log('== TABLE TOOLS (density + CSV) ==');
+    await ta('tools injected into every data table toolbar',async()=>{
+      for(const v of ['applications','projects','clearance','mou','ngos','audit']){
+        W.App.enter('super_admin'); await go(v);
+        const bars=[...d.querySelectorAll('#view .tbar')];
+        if(!bars.length)throw new Error(v+' has no .tbar');
+        bars.forEach(bb=>{const tl=bb.querySelector('.tb-tools');
+          if(!tl)throw new Error(v+': toolbar has no .tb-tools');
+          if(tl.querySelectorAll('.tb-ic').length!==2)throw new Error(v+': expected density + export buttons');
+          if(!tl.querySelector('.tb-dense'))throw new Error(v+': no density toggle');
+          if(tl.querySelector('.tb-dense').getAttribute('aria-pressed')===null)
+            throw new Error(v+': density toggle has no aria-pressed')});
+        if(d.querySelectorAll('#view .tbar .tb-tools').length!==bars.length)
+          throw new Error(v+': tool clusters injected more than once');
+      }
+    });
+    await ta('density toggles, persists and announces state',async()=>{await go('applications');
+      const was=d.body.classList.contains('dense');
+      W.Tools.density();
+      if(d.body.classList.contains('dense')===was)throw new Error('did not toggle');
+      if(W.localStorage.getItem('ead-portal-density')!==(was?'0':'1'))throw new Error('not persisted');
+      const btn=d.querySelector('.tb-dense');
+      if(!btn)throw new Error('no density button to inspect');
+      if(btn.getAttribute('aria-pressed')!==String(!was))throw new Error('aria-pressed out of sync');
+      W.Tools.density();
+      if(d.body.classList.contains('dense')!==was)throw new Error('did not toggle back')});
+    await ta('CSV export reports the exact data-row count',async()=>{await go('applications');
+      const btn=d.querySelector('#view .tb-tools .tb-ic:not(.tb-dense)');
+      if(!btn)throw new Error('no export button');
+      const tbl=d.querySelector('#view .card table.tbl');
+      if(!tbl)throw new Error('no table to export');
+      const expect=tbl.querySelectorAll('tbody tr').length;
+      d.getElementById('toasts').innerHTML='';
+      W.Tools.csv(btn);
+      const body=d.getElementById('toasts').textContent;
+      if(!/CSV exported/.test(body))throw new Error('no export confirmation toast');
+      const m=body.match(/(\d+)\s+data rows/);
+      if(!m)throw new Error('toast did not report a row count: '+body.slice(0,90));
+      if(+m[1]!==expect)throw new Error('reported '+m[1]+' rows, table has '+expect)});
+    await ta('CSV export warns on an empty table instead of writing a blank file',async()=>{
+      await go('applications');
+      W.App.state.app.q='zzzqqqnope';W.App.renderTable();await sleep(60);
+      const tbl=d.querySelector('#view .card table.tbl');
+      const rows=tbl?tbl.querySelectorAll('tbody tr').length:-1;
+      const btn=d.querySelector('#view .tb-tools .tb-ic:not(.tb-dense)');
+      if(!btn)throw new Error('tools vanished after filtering');
+      d.getElementById('toasts').innerHTML='';
+      W.Tools.csv(btn);
+      const body=d.getElementById('toasts').textContent;
+      if(rows===0&&!/Nothing to export/.test(body))throw new Error('empty table did not warn');
+      if(rows>0&&!/CSV exported/.test(body))throw new Error('populated table did not export');
+      W.App.state.app.q='';W.App.renderTable()});
+
+    console.log('== ACCESSIBILITY ==');
+    t('skip link is the first focusable thing in the document',()=>{
+      const sk=d.querySelector('a.skip');
+      if(!sk)throw new Error('no skip link');
+      if(sk.getAttribute('href')!=='#view')throw new Error('skip link does not target #view');
+      if(sk.previousElementSibling)throw new Error('skip link is not first in <body>');
+      if(!d.getElementById('view'))throw new Error('skip link target missing')});
+    t('landmarks and live regions',()=>{
+      const v=d.getElementById('view');
+      if(v.getAttribute('role')!=='main')throw new Error('#view is not role=main');
+      const ts=d.getElementById('toasts');
+      if(ts.getAttribute('aria-live')!=='polite'||ts.getAttribute('role')!=='status')
+        throw new Error('toasts are not a live region');
+      if(!d.querySelector('#sb-nav[aria-label]'))throw new Error('sidebar nav has no label');
+      if(!d.querySelector('.cmdk-pnl[role="dialog"][aria-modal="true"]'))
+        throw new Error('palette is not a dialog')});
+    t('active module is announced with aria-current',()=>{W.App.enter('secretary');W.App.nav('analytics');
+      const cur=[...d.querySelectorAll('#sb-nav [aria-current="page"]')];
+      if(cur.length!==1)throw new Error('expected exactly 1 aria-current, got '+cur.length);
+      if(cur[0].dataset.nav!=='analytics')throw new Error('aria-current on '+cur[0].dataset.nav);
+      W.App.nav('mou');
+      const cur2=d.querySelector('#sb-nav [aria-current="page"]');
+      if(!cur2||cur2.dataset.nav!=='mou')throw new Error('aria-current did not follow navigation')});
+    t('dropdown triggers expose aria-expanded and it tracks state',()=>{
+      W.UI.ddClose();
+      const t1=d.querySelector('#dd-bell button');
+      if(t1.getAttribute('aria-expanded')!=='false')throw new Error('not false when closed');
+      W.UI.dd('dd-bell');
+      if(t1.getAttribute('aria-expanded')!=='true')throw new Error('not true when open');
+      W.UI.ddClose();
+      if(t1.getAttribute('aria-expanded')!=='false')throw new Error('not reset on close');
+      ['dd-fy','dd-bell','dd-role','dd-me'].forEach(id=>{
+        const b=d.querySelector('#'+id+' button');
+        if(!b||!b.hasAttribute('aria-expanded'))throw new Error(id+' trigger has no aria-expanded')})});
+    t('modals are dialogs that take and restore focus',()=>{
+      const before=d.activeElement;
+      W.UI.modal(W.UI.mdlHd('info','Focus test','Body','info')+'<div class="mdl-bd"><button id="fx-a">A</button><button id="fx-b">B</button></div>','narrow');
+      const mdl=d.querySelector('#ovl-c .mdl');
+      if(mdl.getAttribute('role')!=='dialog'||mdl.getAttribute('aria-modal')!=='true')
+        throw new Error('modal is not marked as a dialog');
+      const f=W.UI.focusables(d.getElementById('ovl-c'));
+      if(f.length<3)throw new Error('focusables() found only '+f.length);
+      if(f[0].getAttribute('aria-label')!=='Close')throw new Error('close is not the first focusable');
+      W.UI.trap(d.getElementById('ovl-c'),{key:'Tab',shiftKey:false,preventDefault(){}});
+      W.UI.trap(d.getElementById('ovl-c'),{key:'Tab',shiftKey:true,preventDefault(){}});
+      W.UI.trap(d.getElementById('ovl-c'),{key:'a',preventDefault(){}});
+      W.UI.modalClose();
+      if(d.getElementById('ovl').classList.contains('on'))throw new Error('modal did not close');
+      if(d.body.style.overflow)throw new Error('body scroll left locked after modal close')});
+    t('Tab trap wraps at both ends',()=>{
+      W.UI.modal('<div class="mdl-bd"><button id="t-a">A</button><button id="t-b">B</button></div>','narrow');
+      const root=d.getElementById('ovl-c');
+      d.getElementById('t-b').focus();
+      let blocked=false;
+      W.UI.trap(root,{key:'Tab',shiftKey:false,preventDefault(){blocked=true}});
+      if(!blocked)throw new Error('forward Tab at the end was not wrapped');
+      if(d.activeElement.id!=='t-a')throw new Error('did not wrap to the first, got '+d.activeElement.id);
+      blocked=false;
+      W.UI.trap(root,{key:'Tab',shiftKey:true,preventDefault(){blocked=true}});
+      if(!blocked)throw new Error('backward Tab at the start was not wrapped');
+      if(d.activeElement.id!=='t-b')throw new Error('did not wrap to the last');
+      W.UI.modalClose()});
+    t('body scroll is not unlocked while the palette is still open',()=>{
+      W.App.enter('secretary');
+      W.UI.modal('<div class="mdl-bd">x</div>','narrow');
+      W.Cmd.open();
+      W.UI.modalClose();
+      if(d.body.style.overflow!=='hidden')throw new Error('scroll unlocked with the palette open');
+      W.Cmd.close();
+      if(d.body.style.overflow)throw new Error('scroll left locked after both closed')});
+
     console.log('== FONT SIZE COMPLIANCE (computed) ==');
+    /* sweep a KPI-heavy view, a data table and an open modal so the new
+       sparkline strips, counters and injected toolbar buttons are covered */
+    W.App.enter('super_admin');
+    ['dashboard','analytics','applications','mne','settings'].forEach(v=>{try{W.App.nav(v)}catch(e){}});
+    W.App.nav('dashboard');
+    W.UI.modal(W.UI.mdlHd('info','Sweep','Body','info')+'<div class="mdl-bd"><button class="btn">OK</button></div>','');
+    W.UI.modalClose();
     let oob=0,checked=0;const seen=new Set();
     d.querySelectorAll('#auth *,#app *,#ovl *').forEach(el=>{
       const fs=w.getComputedStyle(el).fontSize;checked++;

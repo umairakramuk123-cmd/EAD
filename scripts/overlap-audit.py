@@ -180,7 +180,8 @@ STACK = [('body::before', None, 'ambient aurora', -2),
          ('.ovl',         None, 'modal', 200),
          ('.drw',         None, 'side drawer', 201),
          ('.cmdk-ovl',    None, 'command palette', 250),
-         ('#toasts',      None, 'toasts', 400)]
+         ('#toasts',      None, 'toasts', 400),
+         ('.skip',        None, 'skip link', 500)]
 found = []
 for sel, media, name, want in STACK:
     got = z(sel, media)
@@ -189,7 +190,7 @@ for sel, media, name, want in STACK:
           'expected %d' % want if got != want else '')
 levels = [g for _, g, _ in found if g is not None]
 check(len(levels) == len(set(levels)), 'no two shell layers share a z-index level')
-check(levels == sorted(levels), 'stack order ascends: ambient < head < topbar < drawer < sidebar < modal < palette < toasts')
+check(levels == sorted(levels), 'stack order ascends: ambient < head < topbar < drawer < sidebar < modal < palette < toasts < skip link')
 # the context menu is set from JS, not CSS
 check('z-index:300' in S,
       'context menu sits at 300 (above palette, below toasts)')

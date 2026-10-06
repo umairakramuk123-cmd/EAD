@@ -238,6 +238,22 @@ table{border-collapse:separate;border-spacing:0;width:100%}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* Focus ring */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+}
+.skip{
+  position:fixed;top:9px;left:50%;transform:translate(-50%,-190%);z-index:500;
+  padding:9px 17px;border-radius:var(--r-sm);background:var(--g700);color:#fff;
+  font-size:var(--fs-13);font-weight:800;text-decoration:none;letter-spacing:-.006em;
+  box-shadow:0 12px 32px rgba(2,20,14,.42);
+  transition:transform .22s cubic-bezier(.34,1.4,.64,1);
+}
+.skip:focus{transform:translate(-50%,0)}
+/* view entrance — opacity + translate only, never scale, so it cannot disturb
+   ApexCharts' width/height measurement of its containers */
+#view.v-in{animation:viewIn .32s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes viewIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 :focus-visible{outline:2px solid var(--g400);outline-offset:2px;border-radius:var(--r-xs)}
 .sb :focus-visible,.lg-side :focus-visible{outline-color:var(--gold-300)}
 
@@ -405,7 +421,10 @@ svg{display:block}
 .kpi-lbl{font-size:var(--fs-13);font-weight:600;color:var(--ink-500);letter-spacing:.004em}
 .kpi-val{font-size:var(--fs-16);font-weight:800;color:var(--ink-900);letter-spacing:-.022em;margin-top:5px;line-height:1.15}
 .kpi-val .unit{font-size:var(--fs-13);font-weight:600;color:var(--ink-400);margin-left:3px;letter-spacing:0}
-.kpi-ft{display:flex;align-items:center;gap:7px;margin-top:11px;padding-top:9px;border-top:1px dashed var(--line)}
+.kpi-spark{height:32px;margin-top:9px;width:100%;position:relative;pointer-events:none}
+.kpi-spark > div,.kpi-spark svg{width:100%!important}
+.kpi-val .kv{font-variant-numeric:tabular-nums lining-nums}
+.kpi-ft{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
 .delta{display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-13);font-weight:800}
 .delta svg{width:12px;height:12px}
 .delta.up{color:var(--success)} .delta.down{color:var(--danger)} .delta.flat{color:var(--ink-400)}
@@ -756,6 +775,23 @@ html.sb-rail .sb-collapse .lbl{display:none}
 /* Toolbar */
 .tbar{display:flex;align-items:center;gap:9px;padding:12px 17px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
 .tbar .sp{flex:1}
+/* injected table tools */
+.tb-tools{display:flex;align-items:center;gap:7px;flex:none}
+.tb-ic{
+  width:32px;height:32px;border-radius:var(--r-xs);border:1px solid var(--line);background:var(--sunken);
+  display:grid;place-items:center;cursor:pointer;color:var(--ink-500);transition:.18s;flex:none;
+}
+.tb-ic:hover{background:var(--raise);border-color:var(--g300);color:var(--g600);transform:translateY(-1px)}
+[data-theme="dark"] .tb-ic:hover{color:var(--g200)}
+.tb-ic svg{width:15px;height:15px}
+.tb-ic[aria-pressed="true"]{background:var(--g50);border-color:var(--g400);color:var(--g700)}
+[data-theme="dark"] .tb-ic[aria-pressed="true"]{background:rgba(34,165,124,.18);border-color:rgba(79,188,151,.42);color:var(--g200)}
+/* compact density */
+body.dense .tbl tbody td{padding:5px 12px}
+body.dense .tbl thead th{height:33px}
+body.dense .body{padding:14px 16px}
+body.dense .pager{padding:8px 17px}
+body.dense .li{padding:8px 14px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{
   height:29px;padding:0 12px;border-radius:20px;border:1px solid var(--line);background:var(--sunken);
@@ -1530,6 +1566,7 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
 </style>
 </head>
 <body>
+<a class="skip" href="#view">Skip to main content</a>
 <!-- ============ ICON SPRITE (Feather-style, 24x24 stroke) ============ -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
 <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="currentColor" stroke="none"/></symbol>
@@ -2155,7 +2192,7 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
         </div>
       </header>
 
-      <div class="body" id="view"></div>
+      <div class="body" id="view" role="main"></div>
 
       <footer class="app-ft" style="flex:none;padding:13px 18px;border-top:1px solid var(--line);background:var(--foot);display:flex;gap:14px;align-items:center;flex-wrap:wrap">
         <span class="t13 dim w6">&copy; 2026 Economic Affairs Division, Ministry of Economic Affairs — Government of Pakistan</span>
@@ -2189,7 +2226,7 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
     </div>
   </div>
 </div>
-<div id="toasts"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
 <script>
 /* ============================================================
    EAD e-PORTAL — APPLICATION CORE
@@ -2436,14 +2473,47 @@ const UI={
     const el=document.getElementById(id), was=el.classList.contains('on');
     document.querySelectorAll('.dd.on').forEach(d=>d.classList.remove('on'));
     if(!was)el.classList.add('on');
+    UI.syncExpanded();
   },
-  ddClose(){document.querySelectorAll('.dd.on').forEach(d=>d.classList.remove('on'))},
+  ddClose(){document.querySelectorAll('.dd.on').forEach(d=>d.classList.remove('on'));UI.syncExpanded()},
+  /* keep aria-expanded truthful on every dropdown trigger */
+  syncExpanded(){
+    document.querySelectorAll('.dd').forEach(d=>{
+      const t=d.querySelector('button,[role="button"]');
+      if(t)t.setAttribute('aria-expanded',d.classList.contains('on')?'true':'false');
+    });
+  },
   modal(html,size=''){
     const o=document.getElementById('ovl');
-    document.getElementById('ovl-c').innerHTML=`<div class="mdl ${size}">${html}</div>`;
+    this._lastFocus=document.activeElement;
+    document.getElementById('ovl-c').innerHTML=`<div class="mdl ${size}" role="dialog" aria-modal="true">${html}</div>`;
     o.classList.add('on');document.body.style.overflow='hidden';
+    const f=UI.focusables(document.getElementById('ovl-c'));
+    if(f.length)setTimeout(()=>{try{f[0].focus()}catch(e){}},20);
   },
-  modalClose(){const o=document.getElementById('ovl');o.classList.remove('on');document.getElementById('ovl-c').innerHTML='';document.body.style.overflow=''},
+  modalClose(){
+    const o=document.getElementById('ovl');
+    o.classList.remove('on');document.getElementById('ovl-c').innerHTML='';
+    const co=document.getElementById('cmdk-ovl');
+    if(!co||!co.classList.contains('on'))document.body.style.overflow='';
+    const back=this._lastFocus;this._lastFocus=null;
+    if(back&&back.isConnected)setTimeout(()=>{try{back.focus()}catch(e){}},0);
+  },
+  /* everything focusable inside a container, in DOM order */
+  focusables(root){
+    if(!root)return [];
+    return [...root.querySelectorAll(
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),'+
+      'textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.getAttribute('aria-hidden')!=='true');
+  },
+  /* keep Tab inside an open overlay */
+  trap(root,e){
+    if(e.key!=='Tab')return;
+    const f=this.focusables(root); if(!f.length)return;
+    const first=f[0], last=f[f.length-1], a=document.activeElement;
+    if(e.shiftKey&&(a===first||!root.contains(a))){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&(a===last||!root.contains(a))){e.preventDefault();first.focus()}
+  },
   mdlHd(icon,title,sub,tone){
     const cls=tone==='danger'?'--ci:var(--danger);--ci-bg:var(--danger-bg);--ci-ln:var(--danger-line)':tone==='warn'?'--ci:var(--warn);--ci-bg:var(--warn-bg);--ci-ln:var(--warn-line)':tone==='info'?'--ci:var(--info);--ci-bg:var(--info-bg);--ci-ln:var(--info-line)':'';
     return `<div class="mdl-hd"><span class="ic-chip" style="${cls}">${I(icon)}</span><div class="grow"><h3>${title}</h3>${sub?`<div class="sub">${sub}</div>`:''}</div><button class="btn btn-ic btn-quiet btn-sm" onclick="UI.modalClose()" aria-label="Close">${I('x','',2.4)}</button></div>`;
@@ -2854,7 +2924,7 @@ const App={
   refreshCharts(){
     if(!document.getElementById('app').classList.contains('on'))return;
     this.destroyCharts();
-    document.querySelectorAll('#view .chart').forEach(el=>{delete el.dataset.done;el.innerHTML=''});
+    document.querySelectorAll('#view .chart,#view .kpi-spark').forEach(el=>{delete el.dataset.done;el.innerHTML=''});
     try{(AfterRender[this.view]||(()=>{}))()}catch(e){console.warn(e)}
   },
   renderShell(){
@@ -2869,7 +2939,8 @@ const App={
         let badge='';
         if(i.queue==='apps'){const n=this.queueCount();if(n)badge=`<span class="sb-n">${n}</span>`}
         if(i.queue==='clr'){const n=DATA.clr.filter(c=>c.status==='Awaiting Agency'||c.status==='Under Review').length;if(n)badge=`<span class="sb-n g">${n}</span>`}
-        html+=`<a class="sb-i ${this.view===i.id?'on':''}" data-nav="${i.id}" title="${i.label}" onclick="App.nav('${i.id}');return false">${I(i.icon)}<span class="lbl">${i.label}</span>${badge}</a>`;
+        const act=this.view===i.id;
+        html+=`<a class="sb-i ${act?'on':''}" data-nav="${i.id}" title="${i.label}"${act?' aria-current="page"':''} onclick="App.nav('${i.id}');return false">${I(i.icon)}<span class="lbl">${i.label}</span>${badge}</a>`;
       });
     });
     document.getElementById('sb-nav').innerHTML=html;
@@ -2914,10 +2985,19 @@ const App={
   nav(view,skipCrumb){
     if(!canView(ROLE(this.role),view)){toast('Access denied','Your role does not permit this section.','err');return}
     this.destroyCharts(); this.view=view;
-    document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===view));
+    // keep both the visual state and the accessibility state in step
+    document.querySelectorAll('[data-nav]').forEach(a=>{
+      const on=a.dataset.nav===view;
+      a.classList.toggle('on',on);
+      if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+    });
+    // long nav lists: bring the active module into view inside the rail's own scroller
+    const cur=document.querySelector('#sb-nav .sb-i.on');
+    if(cur&&cur.scrollIntoView)try{cur.scrollIntoView({block:'nearest'})}catch(e){}
     this.crumb(view);
     const host=document.getElementById('view');
     host.innerHTML=(Views[view]||Views.dashboard)();
+    host.classList.remove('v-in'); void host.offsetWidth; host.classList.add('v-in');
     host.scrollTop=0; window.scrollTo(0,0);
     UI.ddClose(); this.toggleSb(false);
     requestAnimationFrame(()=>{try{(AfterRender[view]||(()=>{}))()}catch(e){console.warn('after-render',view,e)}});
@@ -2974,12 +3054,18 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(Cmd.isOpen()){Cmd.close();return}
     UI.ddClose();
-    if(document.getElementById('ovl').classList.contains('on'))UI.modalClose();
+    if(document.getElementById('ovl').classList.contains('on')){UI.modalClose();return};
     return;
   }
   // ⌘K / Ctrl+K — command palette from anywhere inside the app
   if((e.key==='k'||e.key==='K')&&(e.metaKey||e.ctrlKey)){
     e.preventDefault(); if(inApp)Cmd.open(); return;
+  }
+  // Tab is trapped inside an open modal
+  if(e.key==='Tab'){
+    const ovl=document.getElementById('ovl');
+    if(ovl.classList.contains('on'))UI.trap(document.getElementById('ovl-c'),e);
+    return;
   }
   // "/" — same palette, only when no field has focus
   if(e.key==='/'&&inApp&&!Cmd.isOpen()&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){
@@ -3002,10 +3088,17 @@ const P={
       :o.tone==='purple'?'--k:var(--purple);--kbg:var(--purple-bg);--kln:var(--purple-line)'
       :'--k:var(--g500);--kbg:var(--g50);--kln:var(--g100)';
     const d=o.delta?`<span class="delta ${o.delta>0?'up':o.delta<0?'down':'flat'}">${I(o.delta>0?'tup':o.delta<0?'tdn':'right','',2.8)}${Math.abs(o.delta)}%</span>`:'';
-    return `<div class="kpi" style="${cls}">
+    // deterministic 12-point trend for the sparkline, hashed from the label so it is
+    // stable across reloads and does not disturb the seeded demo-data PRNG
+    const tone=o.tone||'ok';
+    const sp=sparkSeries(o.label,o.delta||0,12);
+    const raw=String(o.value).trim();
+    const numeric=/^[\d,]+$/.test(raw);
+    return `<div class="kpi" style="${cls}" data-tone="${tone}">
       <div class="kpi-top"><span class="kpi-ic">${I(o.icon,'',1.9)}</span>
-        <div class="grow"><div class="kpi-lbl">${o.label}</div><div class="kpi-val">${o.value}${o.unit?`<span class="unit">${o.unit}</span>`:''}</div></div>
+        <div class="grow"><div class="kpi-lbl">${o.label}</div><div class="kpi-val">${numeric?`<span class="kv" data-count="${raw.replace(/,/g,'')}">${o.value}</span>`:o.value}${o.unit?`<span class="unit">${o.unit}</span>`:''}</div></div>
       </div>
+      <div class="kpi-spark" data-spark="${sp.join(',')}" aria-hidden="true"></div>
       <div class="kpi-ft">${d}${o.note?`<span class="kpi-note">${o.note}</span>`:''}</div></div>`;
   },
   panel(title,sub,body,foot,extra=''){
@@ -3268,6 +3361,126 @@ Views.dashboard=function(){
     return h;
   }
   return h;
+};
+
+/* ------------------------------------------------------------
+   KPI SPARKLINES + COUNT-UP
+   Hash-seeded so the trend is identical on every reload and never
+   advances the demo-data PRNG. Colours are theme-aware.
+   ------------------------------------------------------------ */
+function sparkSeries(seed,delta,n){
+  let h=2166136261;
+  const str=String(seed)+'|'+delta;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}
+  const r=()=>{h^=h<<13;h^=h>>>17;h^=h<<5;h>>>=0;return h/4294967296};
+  const out=[];let v=52+r()*8;const drift=(Number(delta)||0)*0.62;
+  for(let i=0;i<n;i++){v+=drift/n*2.1+(r()-0.5)*7.5;out.push(Math.max(6,Math.round(v*10)/10))}
+  return out;
+}
+const SPARK_C={
+  gold:['#C9A227','#E3BB5C'],info:['#1D6FB8','#6FB6EC'],danger:['#AF3629','#EE8A7C'],
+  warn:['#A9761A','#D9A94F'],purple:['#5B4B8A','#A99BE0'],ok:['#0E6146','#4FBC97']
+};
+const Spark={
+  mount(){
+    const dark=typeof Theme!=='undefined'&&Theme.isDark();
+    document.querySelectorAll('#view .kpi-spark[data-spark]').forEach(el=>{
+      if(el.dataset.done)return; el.dataset.done='1';
+      const data=el.dataset.spark.split(',').map(Number);
+      if(!data.length||typeof ApexCharts==='undefined')return;
+      const tone=(el.closest('.kpi')||{}).dataset?.tone||'ok';
+      const col=(SPARK_C[tone]||SPARK_C.ok)[dark?1:0];
+      const lo=Math.min.apply(null,data), hi=Math.max.apply(null,data);
+      try{
+        const c=new ApexCharts(el,{
+          chart:{type:'area',height:32,sparkline:{enabled:true},background:'transparent',
+            fontFamily:'Manrope, sans-serif',animations:{enabled:true,speed:520,easing:'easeout'}},
+          series:[{name:'trend',data:data}],
+          colors:[col],stroke:{curve:'smooth',width:2},
+          fill:{type:'gradient',gradient:{opacityFrom:.34,opacityTo:0,shadeIntensity:.3,stops:[0,100]}},
+          markers:{size:0},tooltip:{enabled:false},xaxis:{crosshairs:{show:false}},
+          yaxis:{min:lo-(hi-lo)*0.45-1,max:hi+(hi-lo)*0.25+1},
+          grid:{padding:{top:3,bottom:1,left:0,right:0}}
+        });
+        const pr=c.render();if(pr&&pr.catch)pr.catch(()=>{});
+        App.charts.push(c);
+      }catch(e){console.warn('sparkline',e)}
+    });
+  },
+  count(scope){
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    (scope||document).querySelectorAll('[data-count]:not([data-counted])').forEach(el=>{
+      el.dataset.counted='1';
+      const target=parseFloat(el.dataset.count);
+      if(!isFinite(target)||reduce){el.textContent=nf(target);return}
+      const t0=performance.now(),dur=760;
+      const step=now=>{
+        const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3);
+        el.textContent=nf(Math.round(target*e));
+        if(k<1)requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+};
+
+/* ------------------------------------------------------------
+   TABLE TOOLS — injected into every .tbar, so all five data views
+   (and any future one) get density control and CSV export for free.
+   ------------------------------------------------------------ */
+const Tools={
+  KEY:'ead-portal-density',
+  init(){
+    let v=null;try{v=localStorage.getItem(this.KEY)}catch(e){}
+    document.body.classList.toggle('dense',v==='1');
+  },
+  inject(){
+    document.querySelectorAll('#view .tbar').forEach(tb=>{
+      if(tb.querySelector('.tb-tools'))return;
+      const d=document.createElement('div');
+      d.className='tb-tools';
+      d.innerHTML='<button type="button" class="tb-ic tb-dense" onclick="Tools.density()" '
+        +'title="Toggle row density" aria-pressed="false" aria-label="Toggle row density">'+I('list','',2.2)+'</button>'
+        +'<button type="button" class="tb-ic" onclick="Tools.csv(this)" '
+        +'title="Export this table to CSV" aria-label="Export this table to CSV">'+I('dl','',2.2)+'</button>';
+      tb.appendChild(d);
+    });
+    this.sync();
+  },
+  sync(){
+    const on=document.body.classList.contains('dense');
+    document.querySelectorAll('.tb-dense').forEach(b=>b.setAttribute('aria-pressed',on?'true':'false'));
+  },
+  density(){
+    const on=document.body.classList.toggle('dense');
+    try{localStorage.setItem(this.KEY,on?'1':'0')}catch(e){}
+    this.sync();
+    // tables reflow, so let ApexCharts re-measure once the transition settles
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(()=>window.dispatchEvent(new Event('resize')),260);
+    toast(on?'Compact rows':'Comfortable rows','Density preference saved on this device.','info');
+  },
+  csv(btn){
+    const card=btn.closest('.card'); if(!card)return;
+    const tbl=card.querySelector('table.tbl');
+    if(!tbl||!tbl.querySelectorAll('tbody tr').length){toast('Nothing to export','This table has no rows on the current filter.','warn');return}
+    const hd=(card.querySelector('.card-hd h3')||{}).textContent||'';
+    const name=(hd||VIEW_T[App.view][0]||'ead').replace(/&amp;/g,'&')
+      .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'ead-export';
+    const q=t=>{t=(t||'').replace(/\s+/g,' ').trim();return /[",]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+    const lines=[...tbl.querySelectorAll('tr')]
+      .map(tr=>[...tr.querySelectorAll('th,td')].map(td=>q(td.textContent)).join(','));
+    const csv='\ufeff'+lines.join('\r\n');
+    const fn=name+'-'+App.fy.toLowerCase().replace(/\s+/g,'-')+'.csv';
+    let url='', obj=false;
+    try{url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));obj=true}
+    catch(e){url='data:text/csv;charset=utf-8,'+encodeURIComponent(csv)}
+    const a=document.createElement('a');
+    a.href=url; a.download=fn; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    if(obj)setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},2000);
+    toast('CSV exported',(lines.length-1)+' data rows written to '+fn+'.','ok');
+  }
 };
 
 /* re-render helper for in-view interactions */
@@ -4856,7 +5069,7 @@ const Charts={
       ?[{name:'Received',data:[42,55,48,61,72,66,78,84,71,88,95,102]},{name:'Decided',data:[31,40,38,49,55,58,63,70,64,74,81,88]}]
       :[{name:'MoUs signed',data:[18,24,21,29,34,31,38,42,36,45,48,52]},{name:'Renewals',data:[11,14,12,18,21,19,24,26,22,29,31,34]}];
     const c=new ApexCharts(node,areaC(MONTHS,series,mode==='apps'?['#0E6146','#C9A227']:['#12795A','#4FBC97']));
-    c.render();App.charts.push(c);
+    const pr=c.render();if(pr&&pr.catch)pr.catch(()=>{});App.charts.push(c);
   }
 };
 
@@ -4868,8 +5081,10 @@ Object.keys(VIEW_T).forEach(k=>{AfterRender[k]=function(){
   document.querySelectorAll('#view .chart').forEach(el=>{
     const f=CHART_DEFS[el.id];if(!f)return;
     if(el.dataset.done)return;el.dataset.done='1';
-    try{const c=new ApexCharts(el,f());c.render();App.charts.push(c)}catch(e){console.warn('chart '+el.id,e)}
+    try{const c=new ApexCharts(el,f());const pr=c.render();if(pr&&pr.catch)pr.catch(()=>{});App.charts.push(c)}
+    catch(e){console.warn('chart '+el.id,e)}
   });
+  Spark.mount(); Spark.count(document.getElementById('view')); Tools.inject();
 }});
 
 /* pagination wiring */
@@ -4888,6 +5103,8 @@ document.addEventListener('click',e=>{
    ============================================================ */
 (function init(){
   Theme.init();
+  Tools.init();
+  UI.syncExpanded();
   Auth.init();
   Auth._paintPanels();
   Auth.suStepN=1;Auth.renderSteps();

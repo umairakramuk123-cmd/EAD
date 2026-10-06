@@ -10,6 +10,9 @@ Built to BRD v1.1 (`EAD- Updated BRD 1.1`).
 
 **v3 — floating icon-rail sidebar, command palette (⌘K), and a geometrically-proven no-overlap shell.**
 
+**v4 — live KPI sparklines, animated counters, per-table density control and CSV export, a full
+accessibility pass, and hardened chart lifecycle.**
+
 **Open [`ead-portal.html`](ead-portal.html) directly in any browser.** There is nothing to install,
 build or serve.
 
@@ -24,7 +27,7 @@ networks that block CDNs — which matters for government deployments behind res
 | | |
 |---|---|
 | File | `ead-portal.html` |
-| Size | ~1.02 MB |
+| Size | ~1.05 MB |
 | External requests | 0 |
 | Font | Manrope only, 400/500/600/700/800 |
 | Type scale | Hard-constrained to 13–16 px (13 / 14 / 15 / 16 only) |
@@ -187,6 +190,55 @@ had inline `min-width` values that could exceed a 320px viewport; a `font-size:0
 rail mode registered as a type-scale violation; and a `22px` login heading override broke the 13–16px
 constraint.
 
+## Enhancements v4 — live data, table controls, accessibility
+
+### KPI tiles are alive
+
+Every KPI tile now carries a **12-point sparkline** in the tile's own accent colour, rendered by
+ApexCharts in `sparkline` mode (no axes, no tooltip, no chrome — just the trend). The series is
+**hash-seeded from the tile's label**, so a given metric draws the identical curve on every reload and
+never advances the demo-data PRNG, and its slope follows the direction of the tile's delta: a `+12%`
+tile trends up, a `−8%` tile trends down.
+
+The headline number **counts up** from zero on an eased 760 ms curve whenever the value is numeric
+(`nf()`-formatted with tabular figures so the digits do not jitter). Non-numeric values such as
+`$16.9B`, `PKR 1.2B` or `94%` are detected and left untouched rather than mangled. Both effects are
+suppressed under `prefers-reduced-motion`.
+
+### Table controls
+
+A tools cluster is **injected into every `.tbar`** after render, so all five data views — and any table
+added later — get it for free without touching a single view:
+
+- **Density toggle** — comfortable (10px cell padding) or compact (5px), persisted to
+  `localStorage['ead-portal-density']`, announced through `aria-pressed`, and it tells ApexCharts to
+  re-measure once the reflow settles.
+- **CSV export** — serialises the table exactly as filtered and sorted on screen, with a BOM so Excel
+  opens UTF-8 correctly, RFC-4180 quoting, and a filename derived from the panel title and financial
+  year. Falls back to a `data:` URI where `URL.createObjectURL` is unavailable, warns instead of
+  writing a blank file when the current filter has no rows, and confirms the exact row count.
+
+### Accessibility
+
+- **Skip link** — first focusable element in the document, parked off-screen until focused, targeting `#view`
+- **Landmarks** — `role="main"` on the content region, `aria-label` on the sidebar nav, dialog semantics on the modal and the palette
+- **Live region** — toasts are `role="status"` with `aria-live="polite"`
+- **`aria-current="page"`** tracks the active module on every navigation, not just on sign-in
+- **`aria-expanded`** is kept truthful on all four topbar dropdown triggers
+- **Focus management** — opening a modal stores the trigger, moves focus to the first control
+  (the Close button), **traps Tab and Shift+Tab inside the overlay**, and returns focus on close
+- `.sr-only` utility for text that should be read but not seen
+
+### Motion and lifecycle
+
+Views enter on a 320 ms opacity + 7 px rise. It deliberately uses **translate and opacity only, never
+scale**, because a scale transform would change what ApexCharts measures in its containers.
+
+Chart lifecycle is hardened: `render()` returns a Promise that rejects on empty data or an unsupported
+environment, and that rejection escapes any synchronous `try/catch` — under Node 22 it aborts the
+process outright. All three creation sites now attach a `.catch()`, so a chart that cannot draw logs a
+warning instead of throwing an unhandled rejection in the client's console.
+
 ## Roles (13)
 
 Every role has its own sidebar, dashboard, KPI set and write permissions. Switch between them live
@@ -253,6 +305,20 @@ all fitting without a scrollbar). **0 errors, 0 warnings.**
 
 `scripts/login-height-budget.py` reproduces the height budget by parsing the stylesheet that ships in
 the HTML, so the no-scroll claim can be re-checked after any CSS edit.
+
+v4 added: 11 more tests — sparkline determinism, bounds, seed sensitivity and trend direction;
+one sparkline per KPI tile with valid 12-point data; sparkline remount across a theme switch;
+teardown tracking; counter coverage with non-numeric values left alone; count-up settling on the
+exact target; tool injection into all six data-table views without double-injection; density
+toggle/persist/`aria-pressed`; CSV row-count accuracy; and the empty-table guard. Plus seven
+accessibility tests (skip link position, landmarks, live regions, `aria-current` following
+navigation, `aria-expanded` tracking, dialog focus management, and Tab wrapping at both ends).
+The computed font sweep now covers 1,759 elements — up from 1,622 — because it renders a
+KPI-heavy view, a data table and a modal first, so the new sparkline strips, counters and injected
+toolbar buttons are all measured. **0 values outside 13–16 px.**
+
+`scripts/run-checks.sh` runs all five passes end to end (installing jsdom into a scratch directory
+on first use) and exits non-zero on any failure.
 
 v3 added: 15 shell tests (rail sidebar structure, topbar structure, tooltips, rail persistence, the
 role-aware quick action across all 13 roles, palette structure, per-role module permission filtering,
