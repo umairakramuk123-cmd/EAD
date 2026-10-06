@@ -13,6 +13,9 @@ Built to BRD v1.1 (`EAD- Updated BRD 1.1`).
 **v4 — live KPI sparklines, animated counters, per-table density control and CSV export, a full
 accessibility pass, and hardened chart lifecycle.**
 
+**v5 — a whole-portal refinement layer: a formal elevation scale and a consistent depth language
+across every component, machine-proven to touch surface treatment only.**
+
 **Open [`ead-portal.html`](ead-portal.html) directly in any browser.** There is nothing to install,
 build or serve.
 
@@ -27,7 +30,7 @@ networks that block CDNs — which matters for government deployments behind res
 | | |
 |---|---|
 | File | `ead-portal.html` |
-| Size | ~1.05 MB |
+| Size | ~1.06 MB |
 | External requests | 0 |
 | Font | Manrope only, 400/500/600/700/800 |
 | Type scale | Hard-constrained to 13–16 px (13 / 14 / 15 / 16 only) |
@@ -239,6 +242,63 @@ environment, and that rejection escapes any synchronous `try/catch` — under No
 process outright. All three creation sites now attach a `.catch()`, so a chart that cannot draw logs a
 warning instead of throwing an unhandled rejection in the client's console.
 
+## Refinement layer v5 — one depth language across the whole portal
+
+v2–v4 redesigned the shell, the login and the data surfaces, but the component shadows were still
+ad-hoc literals written per rule — `0 2px 10px rgba(10,77,56,.30)` here, `0 16px 40px` there. v5
+replaces them with a **formal four-step elevation scale** that every surface draws from, so a card,
+a modal, a dropdown and a toast now read as the same material at different heights:
+
+| Token | Use | Light | Dark |
+|---|---|---|---|
+| `--el-1` | controls at rest: buttons, chips, pager, tool icons | 2-layer, 5% | 34% black |
+| `--el-2` | cards, KPI tiles, banners, file rows | 2-layer, 6–10% | 42–48% |
+| `--el-3` | dropdowns, toasts, hovered cards | 2-layer, 9–16% | 50–62% |
+| `--el-4` | modal, drawer, command palette | 2-layer, 18–30% | 64–80% |
+
+Alongside them: `--hi` / `--hi-soft` (the 1px inner specular highlight that makes glass read as a
+physical sheet) and `--sheen` (a 168° top-left wash). Every component now gets the same treatment.
+
+### What changed, surface by surface
+
+- **Cards** — specular sheen, `--el-2` at rest, and the first/last child inherits the card's corner
+  radius so a full-bleed toolbar, table head or pager can no longer square off the rounded corners.
+- **KPI tiles** — the accent edge now casts a glow in its own tone; labels go small-caps with tracked
+  letterforms; values use tabular figures.
+- **Tables** — the head gets a gradient wash and an inset rule; hovering a row drives a **gold hairline
+  down its leading edge** and darkens the primary cell; the sorted column gets a gold underline rather
+  than only a brighter caret; keyboard focus gets the same affordance as hover; compact density earns
+  zebra striping, which is what actually makes dense tables legible.
+- **Forms** — focus now stacks the field ring *and* the tinted `--ring`; an invalid field gives one
+  short horizontal nudge; checkboxes, radios and switches get proper cast shadows.
+- **Pills** — warning and danger dots pulse slowly so a live exception catches the eye.
+- **Progress** — a slow travelling highlight sweeps the filled portion only, so a live figure reads as live.
+- **Overlays** — modal, drawer, dropdown, palette and toast all share `--el-3`/`--el-4` and the sheen;
+  dropdown items slide 2px on hover.
+- **Everything else** — timeline nodes, stepper discs, checklist counters, segmented control, list rows,
+  stat tiles, icon chips, empty states, code blocks and the page header, each brought onto the same scale.
+
+### Proven not to move anything
+
+A refinement pass is exactly where layouts quietly break, so the constraint is enforced rather than
+intended. The layer is **appended last** and declares **no layout property at all** — no width, height,
+padding, margin, display, flex, grid, gap, offset, overflow or z-index. Section 9 of
+`scripts/overlap-audit.py` parses the layer and fails the build if that ever stops being true:
+
+- no layout property is declared anywhere in the layer
+- `position` appears only on the offset-free `.prg > i` wrapper and on out-of-flow pseudo-elements
+- `inset` appears only on out-of-flow pseudo-elements
+- the layer's keyframes animate **only** `transform` and `opacity`
+- every property used is a known surface property or one of the eight new tokens
+
+The only `position` in the layer is `position:relative` on the progress fill — no offsets, still in
+flow, same box — added purely to give the sheen a containing block so it is clipped to the filled
+portion instead of the whole track.
+
+Because the sheen is applied as `background-image` rather than a `::before` overlay, it paints *with*
+the background, underneath content, and can never wash over text or charts. Every animated effect is
+disabled under `prefers-reduced-motion`.
+
 ## Roles (13)
 
 Every role has its own sidebar, dashboard, KPI set and write permissions. Switch between them live
@@ -305,6 +365,9 @@ all fitting without a scrollbar). **0 errors, 0 warnings.**
 
 `scripts/login-height-budget.py` reproduces the height budget by parsing the stylesheet that ships in
 the HTML, so the no-scroll claim can be re-checked after any CSS edit.
+
+v5 added: six more audit checks (now **56, 0 failures**) that parse the refinement layer and enforce
+the surface-only contract described above.
 
 v4 added: 11 more tests — sparkline determinism, bounds, seed sensitivity and trend direction;
 one sparkline per KPI tile with valid 12-point data; sparkline remount across a theme switch;

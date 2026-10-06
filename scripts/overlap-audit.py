@@ -272,6 +272,77 @@ check(not [v for v in jspx if not 13 <= v <= 16],
 check(not re.findall(r'font-size:\s*0(?:px)?\s*[;}]', MAINCSS),
       'no font-size:0 text-hiding hacks (they read as 0px violations)')
 
+# --------------------------------------- 9 refinement layer is surface-only
+print('\n9. REFINEMENT LAYER MUST NOT TOUCH LAYOUT')
+anchor = MAINCSS.index('--el-1:')
+mstart = MAINCSS.rfind('}', 0, anchor) + 1
+layer  = MAINCSS[mstart:]
+assert '--el-4' in layer and '.card{' in layer, 'refinement layer not located correctly'
+
+# @keyframes bodies nest braces, which would pollute property extraction; scan them
+# on their own and require them to animate only compositor-friendly properties.
+kf_props = set()
+for kfm in re.finditer(r'@keyframes\s+[\w-]+\{(.+?)\}\}', layer, re.S):
+    for part in kfm.group(1).split(';'):
+        if ':' in part: kf_props.add(part.split(':', 1)[0].strip().split('{')[-1].strip())
+rest = re.sub(r'@keyframes\s+[\w-]+\{.+?\}\}', '', layer, flags=re.S)
+check(kf_props <= {'transform', 'opacity'},
+      'layer keyframes animate only transform/opacity (never layout)', str(sorted(kf_props)))
+
+# properties that can change a box's size, its place in flow, or its clipping
+LAYOUT = {'width','height','min-width','max-width','min-height','max-height',
+          'padding','padding-top','padding-right','padding-bottom','padding-left',
+          'margin','margin-top','margin-right','margin-bottom','margin-left',
+          'display','grid-template-columns','grid-column','grid-row','flex','flex-direction',
+          'flex-wrap','gap','row-gap','column-gap','top','right','bottom','left',
+          'overflow','overflow-x','overflow-y','float','z-index','place-items',
+          'align-items','justify-content','box-sizing'}
+SURFACE = {'background','background-image','box-shadow','border','border-color','border-radius',
+           'color','transition','animation','letter-spacing','text-transform','opacity',
+           'transform','outline','content','filter','font-variant-numeric'}
+props = {}
+def harvest(text):
+    """Collect property -> selectors. At-rules are recursed into rather than split,
+    because their bodies contain nested braces that would masquerade as properties."""
+    for b in blocks(text):
+        mm = re.match(r'^([^{]+)\{(.*)\}$', b, re.S)
+        if not mm: continue
+        sel, decl = mm.group(1).strip(), mm.group(2)
+        if sel.startswith('@'):
+            harvest(decl); continue
+        for part in decl.split(';'):
+            if ':' in part:
+                k = part.split(':', 1)[0].strip()
+                if k: props.setdefault(k, set()).add(sel[:44])
+harvest(rest)
+
+offenders = {k: v for k, v in props.items() if k in LAYOUT}
+for k, v in sorted(offenders.items()):
+    print('      LAYOUT %-14s used by %s' % (k, ', '.join(sorted(v)[:3])))
+check(not offenders, 'refinement layer declares no layout property',
+      '%d offenders' % len(offenders) if offenders else 'surface-only')
+
+# `position` and `inset` are permitted only where they cannot move anything:
+# a relative wrapper with no offsets, and an absolutely-positioned pseudo-element
+# inside a parent that already clips.
+for sel in sorted(props.get('position', ())):
+    ok = sel == '.prg > i' or sel.endswith('::after') or sel.endswith('::before')
+    if not ok: print('      POSITION on %s' % sel)
+check(all(s2 == '.prg > i' or s2.endswith('::after') or s2.endswith('::before')
+          for s2 in props.get('position', ())),
+      'position is used only on the offset-free .prg > i wrapper and on out-of-flow pseudo-elements',
+      str(sorted(props.get('position', ()))))
+check(all(s2.endswith('::after') or s2.endswith('::before') for s2 in props.get('inset', ())),
+      'inset is used only on out-of-flow pseudo-elements', str(sorted(props.get('inset', ()))))
+
+custom = {k for k in props if k.startswith('--')}
+unknown = set(props) - LAYOUT - SURFACE - custom - {'position', 'inset'}
+check(not unknown, 'every refinement property is a known surface property or a new token',
+      str(sorted(unknown)) if unknown else '')
+check(len(custom) >= 6, 'the elevation scale is tokenised, not hardcoded per component',
+      '%d new tokens: %s' % (len(custom), ', '.join(sorted(custom))))
+print('      surface properties used: %s' % ', '.join(sorted(set(props) - custom)))
+
 # ------------------------------------------------------------------- summary
 print('\n' + '=' * 74)
 for n in notes: print('  ' + n)

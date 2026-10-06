@@ -1563,6 +1563,189 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
   .lg-foot{gap:0}
   .lg-foot .sep,.lg-foot a,.lg-foot span:nth-child(n+3){display:none}
 }
+
+/* ============================================================
+   REFINEMENT LAYER
+   ------------------------------------------------------------
+   Surface treatment only. This block deliberately never changes
+   size, layout, display, position or overflow, so the geometric
+   guarantees proved by scripts/overlap-audit.py stay valid and no
+   layout can regress. It is appended last so that, at equal
+   specificity, it wins over the base component rules.
+   ============================================================ */
+
+/* ---- 1. a formal elevation scale, replacing ad-hoc shadow literals ---- */
+:root{
+  --el-1:0 1px 2px rgba(5,40,29,.05),0 1px 3px rgba(5,40,29,.05);
+  --el-2:0 2px 5px -1px rgba(5,40,29,.06),0 6px 16px -7px rgba(5,40,29,.10);
+  --el-3:0 5px 12px -4px rgba(5,40,29,.09),0 16px 36px -14px rgba(5,40,29,.16);
+  --el-4:0 12px 28px -10px rgba(3,26,19,.18),0 38px 82px -32px rgba(3,26,19,.30);
+  --hi:inset 0 1px 0 rgba(255,255,255,.60);
+  --hi-soft:inset 0 1px 0 rgba(255,255,255,.30);
+  --sheen:linear-gradient(168deg,rgba(255,255,255,.30),rgba(255,255,255,0) 27%);
+  --ring:0 0 0 3.5px rgba(27,154,115,.16);
+}
+[data-theme="dark"]{
+  --el-1:0 1px 2px rgba(0,0,0,.34);
+  --el-2:0 2px 6px -1px rgba(0,0,0,.42),0 7px 18px -9px rgba(0,0,0,.48);
+  --el-3:0 6px 15px -5px rgba(0,0,0,.50),0 20px 44px -18px rgba(0,0,0,.62);
+  --el-4:0 14px 34px -12px rgba(0,0,0,.64),0 44px 96px -36px rgba(0,0,0,.80);
+  --hi:inset 0 1px 0 rgba(255,255,255,.09);
+  --hi-soft:inset 0 1px 0 rgba(255,255,255,.05);
+  --sheen:linear-gradient(168deg,rgba(255,255,255,.055),rgba(255,255,255,0) 30%);
+  --ring:0 0 0 3.5px rgba(79,188,151,.20);
+}
+
+/* ---- 2. cards: specular sheen, consistent elevation, corner-safe children ----
+   The sheen goes on background-image (not a ::before overlay) so it paints with
+   the background, underneath content, and can never wash over text or charts.   */
+.card{background-image:var(--sheen);box-shadow:var(--el-2),var(--hi)}
+/* the first and last child inherit the card's corner radius, so a full-bleed
+   toolbar, table head or pager cannot square off the rounded card */
+.card > :first-child{border-radius:var(--r-lg) var(--r-lg) 0 0}
+.card > :last-child{border-radius:0 0 var(--r-lg) var(--r-lg)}
+.card > :only-child{border-radius:var(--r-lg)}
+.card-hd{background-image:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0))}
+[data-theme="dark"] .card-hd{background-image:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0))}
+.card-hd h3{letter-spacing:-.016em}
+.card-ft{box-shadow:var(--hi-soft)}
+
+/* ---- 3. KPI tiles ---- */
+.kpi{background-image:var(--sheen);box-shadow:var(--el-2),var(--hi)}
+.kpi::after{box-shadow:0 0 14px -2px var(--k,var(--g400))}
+.kpi:hover{box-shadow:var(--el-3),var(--hi)}
+.kpi-ic{box-shadow:var(--hi-soft),0 2px 8px -3px rgba(5,40,29,.22)}
+.kpi-val{font-variant-numeric:tabular-nums lining-nums}
+.kpi-lbl{text-transform:uppercase;letter-spacing:.055em}
+
+/* ---- 4. tables — the most-used surface in a record-room portal ---- */
+.tbl thead th{
+  background-image:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,0));
+  box-shadow:inset 0 -1px 0 var(--line);
+}
+[data-theme="dark"] .tbl thead th{background-image:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,0))}
+.tbl tbody tr:hover .cell-main{color:var(--g800)}
+[data-theme="dark"] .tbl tbody tr:hover .cell-main{color:#fff}
+/* hover accent: a gold hairline down the leading edge of the row */
+.tbl tbody td:first-child{box-shadow:inset 0 0 0 0 var(--gold);transition:box-shadow .18s}
+.tbl tbody tr:hover td:first-child{box-shadow:inset 2.5px 0 0 0 var(--gold)}
+/* the column you are sorting by gets a gold underline, not just a brighter caret */
+.tbl thead th.act-srt{box-shadow:inset 0 -2px 0 0 var(--gold);color:var(--g700)}
+[data-theme="dark"] .tbl thead th.act-srt{color:var(--g100)}
+/* keyboard users get the same row affordance as mouse users */
+.tbl tbody tr:focus-within{background:var(--hover);box-shadow:inset 2.5px 0 0 0 var(--g400)}
+.tbl .cell-main{letter-spacing:-.008em}
+.tbl .num{font-variant-numeric:tabular-nums lining-nums}
+.tbl tfoot td{box-shadow:var(--hi-soft)}
+/* compact mode earns zebra striping, which is what makes dense tables legible */
+body.dense .tbl tbody tr:nth-child(even){background:var(--sunken)}
+body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
+
+/* ---- 5. buttons ---- */
+.btn:focus-visible{outline:none;box-shadow:var(--ring),var(--el-1)}
+.btn-primary:focus-visible,.btn-gold:focus-visible,.btn-danger:focus-visible{outline:none;box-shadow:var(--ring),0 0 0 1.5px rgba(255,255,255,.5) inset}
+.btn-ghost{box-shadow:var(--el-1),var(--hi-soft)}
+.btn-quiet:hover{box-shadow:var(--el-1)}
+.lnk:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r-xs)}
+
+/* ---- 6. pills, tags, chips, badges ---- */
+.pill{box-shadow:var(--hi-soft)}
+.pill .dot{box-shadow:0 0 0 2.5px color-mix(in srgb,currentColor 20%,transparent)}
+.pill-danger .dot,.pill-warn .dot{animation:pulseDot 2.6s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.42}}
+.tag{box-shadow:var(--hi-soft)}
+.chip{box-shadow:var(--el-1)}
+.chip.on{box-shadow:0 3px 12px -3px rgba(10,77,56,.42),var(--hi-soft)}
+.chip .ct{font-variant-numeric:tabular-nums}
+.tb-btn,.fy-pick,.rolepick,.pg,.tb-ic{box-shadow:var(--el-1)}
+.tb-btn .bdg{box-shadow:0 2px 7px -1px rgba(150,40,29,.55)}
+
+/* ---- 7. forms ---- */
+.inp,.sel,.ta{box-shadow:var(--inp-sh),var(--hi-soft)}
+.inp:focus,.sel:focus,.ta:focus{box-shadow:var(--inp-focus-sh),var(--ring)}
+.inp.err,.sel.err,.ta.err{animation:nudge .34s cubic-bezier(.36,.07,.19,.97)}
+@keyframes nudge{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-3px)}40%,60%{transform:translateX(3px)}}
+.chk input,.rad input{box-shadow:var(--hi-soft)}
+.chk input:checked,.rad input:checked{box-shadow:0 2px 7px -2px rgba(10,77,56,.55),inset 0 1px 0 rgba(255,255,255,.28)}
+.sw input{box-shadow:inset 0 1px 3px rgba(3,26,19,.22)}
+.sw input:checked{box-shadow:0 2px 9px -2px rgba(10,77,56,.5),inset 0 1px 2px rgba(0,0,0,.14)}
+.sw input::after{box-shadow:0 1px 4px rgba(3,26,19,.38),inset 0 -1px 0 rgba(0,0,0,.06)}
+.drop{box-shadow:var(--el-1)}
+.drop:hover{box-shadow:var(--el-2),var(--hi-soft)}
+.file{box-shadow:var(--el-1)}
+
+/* ---- 8. tabs + segmented control ---- */
+.tab.on{box-shadow:0 8px 14px -14px var(--gold)}
+.tab .ct{font-variant-numeric:tabular-nums}
+.seg{box-shadow:inset 0 1px 3px rgba(3,26,19,.09),var(--hi-soft)}
+[data-theme="dark"] .seg{box-shadow:inset 0 1px 4px rgba(0,0,0,.45)}
+.seg button.on{box-shadow:0 1px 5px rgba(5,51,36,.16),var(--hi)}
+[data-theme="dark"] .seg button.on{box-shadow:0 1px 6px rgba(0,0,0,.5),var(--hi-soft)}
+
+/* ---- 9. timeline, stepper, checklist, progress ---- */
+.tl::before{background:linear-gradient(180deg,var(--line-strong),var(--line) 45%,transparent)}
+.tl-i .nd{box-shadow:var(--el-1)}
+.tl-i.done .nd{box-shadow:0 0 0 3px var(--success-bg),0 2px 9px -2px rgba(10,77,56,.5)}
+.tl-i.cur .nd{box-shadow:0 0 0 4px var(--warn-bg),0 0 14px -2px var(--gold)}
+.tl-i.rej .nd{box-shadow:0 0 0 3px var(--danger-bg),0 2px 9px -2px rgba(150,40,29,.5)}
+.stp .num{box-shadow:var(--el-1)}
+.stp.done .num{box-shadow:0 2px 9px -2px rgba(10,77,56,.5),inset 0 1px 0 rgba(255,255,255,.3)}
+.stp.cur .num{box-shadow:0 0 0 4px var(--warn-bg),0 2px 10px -2px rgba(172,138,28,.6)}
+.ckl-i{box-shadow:none}
+.ckl-i.on{box-shadow:var(--el-1),var(--hi-soft)}
+.ckl-i .n{box-shadow:var(--el-1)}
+.ckl-i.on .n{box-shadow:0 3px 10px -3px rgba(10,77,56,.55),inset 0 1px 0 rgba(255,255,255,.3)}
+.prg{box-shadow:inset 0 1px 3px rgba(3,26,19,.14)}
+[data-theme="dark"] .prg{box-shadow:inset 0 1px 4px rgba(0,0,0,.55)}
+/* a slow travelling highlight so a live figure reads as live */
+.prg > i{position:relative}   /* layout-neutral: in flow, no offsets — gives the sheen a containing block */
+.prg > i::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);
+  transform:translateX(-100%);animation:prgSheen 2.9s ease-in-out infinite;
+}
+@keyframes prgSheen{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
+.prg-row .pv{font-variant-numeric:tabular-nums}
+
+/* ---- 10. overlays: one depth language for modal, drawer, dropdown, toast ---- */
+.mdl{background-image:var(--sheen);box-shadow:var(--el-4),var(--hi)}
+.mdl-hd{background-image:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,0))}
+[data-theme="dark"] .mdl-hd{background-image:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0))}
+.mdl-ft{box-shadow:var(--hi-soft)}
+.drw{background-image:var(--sheen);box-shadow:var(--el-4),var(--hi)}
+.dd-m{background-image:var(--sheen);box-shadow:var(--el-3),var(--hi)}
+.dd-i{transition:background .15s,color .15s,transform .15s}
+.dd-i:hover{transform:translateX(2px)}
+#toasts .toast,.toast{box-shadow:var(--el-3),var(--hi)}
+.cmdk-pnl{background-image:var(--sheen);box-shadow:var(--el-4),var(--hi)}
+.cmdk-in{background-image:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,0))}
+[data-theme="dark"] .cmdk-in{background-image:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0))}
+
+/* ---- 11. list rows, stats, misc blocks ---- */
+.li{transition:background .15s,box-shadow .18s}
+.li:hover{box-shadow:inset 2.5px 0 0 0 var(--g400)}
+.ntf.unread{box-shadow:inset 2.5px 0 0 0 var(--gold)}
+.ic-chip{box-shadow:var(--hi-soft),0 2px 7px -3px rgba(5,40,29,.20)}
+.mini{background-image:var(--sheen);box-shadow:var(--el-1),var(--hi-soft)}
+.mini:hover{box-shadow:var(--el-2),var(--hi-soft)}
+.stat{background-image:var(--sheen);box-shadow:var(--el-1)}
+.stat b{font-variant-numeric:tabular-nums lining-nums}
+.stat:hover{box-shadow:var(--el-2)}
+.kv-r .v{font-variant-numeric:tabular-nums}
+.banner{box-shadow:var(--el-1),var(--hi-soft)}
+.code-blk{box-shadow:var(--el-2),inset 0 1px 0 rgba(255,255,255,.10)}
+.empty .ei{background-image:var(--sheen);box-shadow:var(--el-1)}
+.page-hd{background-image:var(--sheen);box-shadow:var(--el-2),var(--hi)}
+.pager .info b{font-variant-numeric:tabular-nums}
+.pg{font-variant-numeric:tabular-nums}
+.pg.on{box-shadow:0 3px 12px -3px rgba(10,77,56,.5),var(--hi-soft)}
+
+/* ---- 12. respect reduced motion for everything added above ---- */
+@media(prefers-reduced-motion:reduce){
+  .prg > i::after,.pill-danger .dot,.pill-warn .dot{animation:none}
+  .inp.err,.sel.err,.ta.err{animation:none}
+  .tb-btn:hover,.chip:hover,.fy-pick:hover,.rolepick:hover,.tb-ic:hover,.dd-i:hover{transform:none}
+}
 </style>
 </head>
 <body>
