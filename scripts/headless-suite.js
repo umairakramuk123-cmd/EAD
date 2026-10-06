@@ -102,7 +102,7 @@ setTimeout(async()=>{
     t('renewMou + _renew',()=>{W.Views.renewMou(W.DATA.mous[0].id);W.Views._renew(W.DATA.mous[0].id)});
     t('prjForm / donorForm / userForm',()=>{W.Views.prjForm();W.Views.prjForm(W.DATA.projects[0].id);W.Views.donorForm();W.Views.userForm();W.Views.userForm(W.DATA.users[0].id)});
     t('permMdl for all 13 roles',()=>{W.ROLES.forEach(r=>W.Views.permMdl(r.id))});
-    t('guide / broadcast / repBuilder / uplAudit / returnForm',()=>{W.Views.guide();W.Views.broadcast();W.Views.repBuilder();W.Views.uplAudit();W.Views.returnForm()});
+    t('guide / broadcast / uplAudit / returnForm',()=>{W.Views.guide();W.Views.broadcast();W.Views.uplAudit();W.Views.returnForm()});
     t('submitChecklist + submitted',()=>{W.Views.submitChecklist();W.Views.submitted()});
     t('UI.confirm',()=>{W.UI.confirm('t','m','ok',()=>{})});
     t('appMore context menu',()=>{W.Views.appMore({stopPropagation(){},clientX:10,clientY:10,target:d.body},W.DATA.apps[0].id)});
@@ -110,7 +110,6 @@ setTimeout(async()=>{
 
     console.log('== INTERACTIONS ==');
     t('role switch to every role',()=>{W.ROLES.forEach(r=>{W.App.switchRole(r.id)})});
-    t('setFY',()=>{const b=d.querySelector('#dd-fy .dd-i');W.App.setFY('FY 2024-25',b)});
     t('toggleSb',()=>{W.App.toggleSb(true);W.App.toggleSb(false);W.App.toggleSb()});
     t('filters + pagination on each table view',()=>{
       const specs={applications:['app',['all','signed','deficient','with_moi']],projects:['pj',['all','ongoing','completed']],
@@ -157,99 +156,40 @@ setTimeout(async()=>{
       ['lg-card','lg-side','lg-form','lg-tabs','lg-fields','lg-submit','lg-actions','lg-demo','lg-top','lg-foot','lg-orb'].forEach(c=>{
         if(!l.querySelector('.'+c))throw new Error('missing .'+c)});
       if(l.querySelector('.auth-brand'))throw new Error('old markup still present')});
-    console.log('== SHELL v3 (rail sidebar + command palette) ==');
-    t('sidebar structure',()=>{const sb=d.getElementById('sb');
-      ['sb-hd','sb-qa','sb-scroll','sb-ft','sb-status','sb-role','sb-collapse','crest'].forEach(c=>{
+    console.log('== SHELL (no added command actions) ==');
+    t('sidebar contains the role navigation without injected quick actions',()=>{const sb=d.getElementById('sb');
+      ['sb-hd','sb-scroll','sb-ft','sb-status','sb-role','crest'].forEach(c=>{
         if(!sb.querySelector('.'+c))throw new Error('missing .'+c)});
-      if(!sb.querySelector('.sb-qabtn'))throw new Error('missing quick action button');
-      if(sb.querySelector('.sb-brand'))throw new Error('old .sb-brand markup still present')});
-    t('topbar structure',()=>{const tb=d.querySelector('.tb');
-      if(!tb.querySelector('.cmdk'))throw new Error('missing command trigger');
+      if(sb.querySelector('.sb-brand'))throw new Error('old .sb-brand markup still present');
+      if(sb.querySelector('.sb-qa,.sb-collapse'))throw new Error('extra sidebar action is present')});
+    t('topbar contains record search and only the account controls',()=>{const tb=d.querySelector('.tb');
+      const form=tb.querySelector('.tb-search');
+      if(!form||!form.querySelector('input[name="q"]'))throw new Error('missing record search');
       if(!tb.querySelector('.tb-act'))throw new Error('missing .tb-act cluster');
-      if(d.getElementById('gsearch'))throw new Error('old #gsearch input still present');
-      if(!tb.querySelector('.fy-pick'))throw new Error('missing .fy-pick');
-      ['dd-fy','dd-bell','dd-role','dd-me'].forEach(id=>{if(!tb.querySelector('#'+id))throw new Error('missing #'+id)});
-      const act=tb.querySelector('.tb-act');
-      ['dd-fy','dd-bell','dd-role','dd-me'].forEach(id=>{if(!act.querySelector('#'+id))throw new Error(id+' not inside .tb-act')})});
-    t('nav items expose title tooltips for rail mode',()=>{W.App.enter('super_admin');
+      if(tb.querySelector('.cmdk,#cmdk-ovl,.fy-pick,#dd-fy,.tb-refresh'))
+        throw new Error('an unrequested command, year or refresh control remains');
+      ['dd-bell','dd-role','dd-me'].forEach(id=>{if(!tb.querySelector('#'+id))throw new Error('missing #'+id)});
+      ['dd-bell','dd-role','dd-me'].forEach(id=>{if(!tb.querySelector('.tb-act #'+id))throw new Error(id+' not inside .tb-act')})});
+    t('nav items keep descriptive titles',()=>{W.App.enter('super_admin');
       const it=[...d.querySelectorAll('#sb-nav [data-nav]')];
       if(!it.length)throw new Error('no nav items');
       const noTitle=it.filter(x=>!x.getAttribute('title'));
       if(noTitle.length)throw new Error(noTitle.length+' items without title')});
-    t('rail mode toggles + persists',()=>{
-      const was=d.documentElement.classList.contains('sb-rail');
-      W.App.toggleRail();
-      if(d.documentElement.classList.contains('sb-rail')===was)throw new Error('did not toggle');
-      if(W.localStorage.getItem('ead-portal-rail')!==(was?'0':'1'))throw new Error('not persisted');
-      W.App.toggleRail();
-      if(d.documentElement.classList.contains('sb-rail')!==was)throw new Error('did not toggle back')});
-    t('quick action reaches a permitted view for all 13 roles',()=>{
-      W.ROLES.forEach(r=>{W.App.enter(r.id);const before=W.App.view;W.App.quickAction();
-        if(!W.canView(r,W.App.view))throw new Error(r.id+' -> '+W.App.view+' not permitted');
-        const lbl=d.getElementById('sb-qa-l').textContent;
-        if(!lbl||lbl.length<4)throw new Error(r.id+' has no quick-action label')})});
-    t('command palette markup present',()=>{const o=d.getElementById('cmdk-ovl');
-      if(!o)throw new Error('no #cmdk-ovl');
-      ['cmdk-pnl','cmdk-in','cmdk-res','cmdk-ft'].forEach(c=>{if(!o.querySelector('.'+c))throw new Error('missing .'+c)});
-      if(!d.getElementById('cmdk-q'))throw new Error('no #cmdk-q input')});
-    t('palette opens, lists modules, closes',()=>{W.App.enter('secretary');
-      W.Cmd.open();
-      if(!d.getElementById('cmdk-ovl').classList.contains('on'))throw new Error('did not open');
-      const rows=d.querySelectorAll('#cmdk-res .cmdk-r');
-      if(rows.length<8)throw new Error('too few default rows: '+rows.length);
-      if(!d.querySelector('#cmdk-res .cmdk-g'))throw new Error('no group headers');
-      W.Cmd.close();
-      if(d.getElementById('cmdk-ovl').classList.contains('on'))throw new Error('did not close')});
-    t('palette offers only permitted modules for every role',()=>{
-      W.ROLES.forEach(r=>{W.App.enter(r.id);W.Cmd.open();
-        const allowed=W.MENU.flatMap(g=>g.items.map(i=>i.id)).filter(v=>W.canView(r,v));
-        W.Cmd.filter('');
-        W.Cmd.rows.filter(x=>x.g==='Modules').forEach(x=>{
-          const hit=allowed.some(v=>((W.VIEW_T[v]||[''])[0]).replace(/&amp;/g,'&')===x.t);
-          if(!hit)throw new Error(r.id+' palette offers disallowed module: '+x.t)});
-        W.Cmd.close()})});
-    t('palette search ranks + filters',()=>{W.App.enter('super_admin');W.Cmd.open();
-      W.Cmd.filter('dashboard');
-      if(!W.Cmd.rows.length)throw new Error('no rows for "dashboard"');
-      if(!/dashboard/i.test(W.Cmd.rows[0].t))throw new Error('bad ranking, top='+W.Cmd.rows[0].t);
-      W.Cmd.filter('zzzqqq');
-      if(W.Cmd.rows.length)throw new Error('nonsense query returned rows');
-      if(!d.querySelector('.cmdk-empty'))throw new Error('no empty state');
-      W.Cmd.close()});
-    t('palette keyboard navigation',()=>{W.App.open=false;W.App.enter('secretary');W.Cmd.open();
-      const n=W.Cmd.rows.length;const s0=W.Cmd.sel;
-      W.Cmd.key({key:'ArrowDown',preventDefault(){}});
-      if(W.Cmd.sel!==(s0+1)%n)throw new Error('ArrowDown failed');
-      W.Cmd.key({key:'ArrowUp',preventDefault(){}});
-      if(W.Cmd.sel!==s0)throw new Error('ArrowUp failed');
-      W.Cmd.key({key:'ArrowUp',preventDefault(){}});
-      if(W.Cmd.sel!==(s0-1+n)%n)throw new Error('ArrowUp wrap failed');
-      if(W.Cmd.key({key:'a',preventDefault(){}})!==true)throw new Error('plain keys should pass through');
-      W.Cmd.close()});
-    t('palette run() navigates to a module',()=>{W.App.enter('secretary');W.Cmd.open();
-      W.Cmd.filter('analytics');const row=W.Cmd.rows[0];
-      W.Cmd.run(0);
-      if(d.getElementById('cmdk-ovl').classList.contains('on'))throw new Error('palette stayed open');
-      if(W.App.view!=='analytics')throw new Error('navigated to '+W.App.view+' not analytics')});
-    t('palette deep-links open a record',()=>{W.App.enter('super_admin');W.Cmd.open();
-      const ngo=W.DATA.ngos[0];W.Cmd.filter(ngo.name.toLowerCase().slice(0,10));
-      const row=W.Cmd.rows.find(x=>x.g==='NGOs');
-      if(!row)throw new Error('no NGO row for '+ngo.name);
-      row.run();
-      if(!d.getElementById('ovl').classList.contains('on')&&!d.querySelector('.drw'))
-        throw new Error('record did not open an overlay');
+    t('topbar search submits to the existing record-search flow',()=>{
+      W.App.enter('super_admin');
+      const f=d.querySelector('.tb-search'),q=f&&f.querySelector('input[name="q"]');
+      if(!f||!q||typeof f.onsubmit!=='function')throw new Error('search form is not wired');
+      q.value=W.DATA.ngos[0].name.slice(0,8);
+      const result=f.onsubmit({preventDefault(){}});
+      if(result!==false)throw new Error('form did not cancel page navigation');
+      if(!d.getElementById('ovl').classList.contains('on'))throw new Error('search did not show results');
       W.UI.modalClose()});
-    t('palette runs commands (theme, rail, sign out)',()=>{W.App.enter('ngo_admin');W.Cmd.open();
-      W.Cmd.filter('theme');const th=W.Cmd.rows[0];const before=W.Theme.get();th.run();
-      if(W.Theme.get()===before)throw new Error('theme command did nothing');
-      W.Cmd.open();W.Cmd.filter('sidebar');W.Cmd.rows[0].run();W.Cmd.close();
-      W.Cmd.open();W.Cmd.filter('sign out');const so=W.Cmd.rows.find(x=>/sign out/i.test(x.t));
-      if(!so)throw new Error('no sign-out command');so.run();
-      if(d.getElementById('app').classList.contains('on'))throw new Error('sign out failed');
-      W.Theme.set('light',true)});
-    t('Escape closes the palette before the modal',()=>{W.App.enter('secretary');W.Cmd.open();
-      d.dispatchEvent(new W.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
-      if(d.getElementById('cmdk-ovl').classList.contains('on'))throw new Error('Escape did not close palette')});
+    t('removed optional controls are absent after table render',()=>{
+      W.App.enter('super_admin');W.App.nav('applications');
+      if(d.querySelector('#view .tb-tools,.tb-dense,.tb-ic'))throw new Error('table tools remain');
+      if(d.body.classList.contains('dense'))throw new Error('compact-density state remains');
+      if(d.getElementById('cmdk-ovl')||d.documentElement.classList.contains('sb-rail'))
+        throw new Error('palette or collapsed rail remains')});
     console.log('== CHART OPTION BUILDERS ==');
     let cn=0,bad=[];
     Object.keys(W.CHART_DEFS).forEach(id=>{try{const o=W.CHART_DEFS[id]();
@@ -327,58 +267,14 @@ setTimeout(async()=>{
       if(kv.textContent.replace(/,/g,'')!==target)
         throw new Error('counter did not settle on '+target+', got '+kv.textContent)});
 
-    console.log('== TABLE TOOLS (density + CSV) ==');
-    await ta('tools injected into every data table toolbar',async()=>{
+    console.log('== NO INJECTED TABLE ACTIONS ==');
+    await ta('rendered table toolbars contain only view-specific actions',async()=>{
       for(const v of ['applications','projects','clearance','mou','ngos','audit']){
-        W.App.enter('super_admin'); await go(v);
-        const bars=[...d.querySelectorAll('#view .tbar')];
-        if(!bars.length)throw new Error(v+' has no .tbar');
-        bars.forEach(bb=>{const tl=bb.querySelector('.tb-tools');
-          if(!tl)throw new Error(v+': toolbar has no .tb-tools');
-          if(tl.querySelectorAll('.tb-ic').length!==2)throw new Error(v+': expected density + export buttons');
-          if(!tl.querySelector('.tb-dense'))throw new Error(v+': no density toggle');
-          if(tl.querySelector('.tb-dense').getAttribute('aria-pressed')===null)
-            throw new Error(v+': density toggle has no aria-pressed')});
-        if(d.querySelectorAll('#view .tbar .tb-tools').length!==bars.length)
-          throw new Error(v+': tool clusters injected more than once');
+        W.App.enter('super_admin');await go(v);
+        if(!d.querySelector('#view .tbar'))throw new Error(v+' has no .tbar');
+        if(d.querySelector('#view .tb-tools,.tb-ic,.tb-dense'))throw new Error(v+': injected export/density action remains');
       }
     });
-    await ta('density toggles, persists and announces state',async()=>{await go('applications');
-      const was=d.body.classList.contains('dense');
-      W.Tools.density();
-      if(d.body.classList.contains('dense')===was)throw new Error('did not toggle');
-      if(W.localStorage.getItem('ead-portal-density')!==(was?'0':'1'))throw new Error('not persisted');
-      const btn=d.querySelector('.tb-dense');
-      if(!btn)throw new Error('no density button to inspect');
-      if(btn.getAttribute('aria-pressed')!==String(!was))throw new Error('aria-pressed out of sync');
-      W.Tools.density();
-      if(d.body.classList.contains('dense')!==was)throw new Error('did not toggle back')});
-    await ta('CSV export reports the exact data-row count',async()=>{await go('applications');
-      const btn=d.querySelector('#view .tb-tools .tb-ic:not(.tb-dense)');
-      if(!btn)throw new Error('no export button');
-      const tbl=d.querySelector('#view .card table.tbl');
-      if(!tbl)throw new Error('no table to export');
-      const expect=tbl.querySelectorAll('tbody tr').length;
-      d.getElementById('toasts').innerHTML='';
-      W.Tools.csv(btn);
-      const body=d.getElementById('toasts').textContent;
-      if(!/CSV exported/.test(body))throw new Error('no export confirmation toast');
-      const m=body.match(/(\d+)\s+data rows/);
-      if(!m)throw new Error('toast did not report a row count: '+body.slice(0,90));
-      if(+m[1]!==expect)throw new Error('reported '+m[1]+' rows, table has '+expect)});
-    await ta('CSV export warns on an empty table instead of writing a blank file',async()=>{
-      await go('applications');
-      W.App.state.app.q='zzzqqqnope';W.App.renderTable();await sleep(60);
-      const tbl=d.querySelector('#view .card table.tbl');
-      const rows=tbl?tbl.querySelectorAll('tbody tr').length:-1;
-      const btn=d.querySelector('#view .tb-tools .tb-ic:not(.tb-dense)');
-      if(!btn)throw new Error('tools vanished after filtering');
-      d.getElementById('toasts').innerHTML='';
-      W.Tools.csv(btn);
-      const body=d.getElementById('toasts').textContent;
-      if(rows===0&&!/Nothing to export/.test(body))throw new Error('empty table did not warn');
-      if(rows>0&&!/CSV exported/.test(body))throw new Error('populated table did not export');
-      W.App.state.app.q='';W.App.renderTable()});
 
     console.log('== ACCESSIBILITY ==');
     t('skip link is the first focusable thing in the document',()=>{
@@ -394,8 +290,11 @@ setTimeout(async()=>{
       if(ts.getAttribute('aria-live')!=='polite'||ts.getAttribute('role')!=='status')
         throw new Error('toasts are not a live region');
       if(!d.querySelector('#sb-nav[aria-label]'))throw new Error('sidebar nav has no label');
-      if(!d.querySelector('.cmdk-pnl[role="dialog"][aria-modal="true"]'))
-        throw new Error('palette is not a dialog')});
+      W.UI.modal('<div class="mdl-bd">landmark test</div>','narrow');
+      const mdl=d.querySelector('#ovl-c .mdl[role="dialog"][aria-modal="true"]');
+      if(!mdl)throw new Error('opened modal is not a dialog');
+      W.UI.modalClose();
+      if(d.getElementById('cmdk-ovl'))throw new Error('unrequested command palette remains')});
     t('active module is announced with aria-current',()=>{W.App.enter('secretary');W.App.nav('analytics');
       const cur=[...d.querySelectorAll('#sb-nav [aria-current="page"]')];
       if(cur.length!==1)throw new Error('expected exactly 1 aria-current, got '+cur.length);
@@ -411,7 +310,7 @@ setTimeout(async()=>{
       if(t1.getAttribute('aria-expanded')!=='true')throw new Error('not true when open');
       W.UI.ddClose();
       if(t1.getAttribute('aria-expanded')!=='false')throw new Error('not reset on close');
-      ['dd-fy','dd-bell','dd-role','dd-me'].forEach(id=>{
+      ['dd-bell','dd-role','dd-me'].forEach(id=>{
         const b=d.querySelector('#'+id+' button');
         if(!b||!b.hasAttribute('aria-expanded'))throw new Error(id+' trigger has no aria-expanded')})});
     t('modals are dialogs that take and restore focus',()=>{
@@ -442,14 +341,12 @@ setTimeout(async()=>{
       if(!blocked)throw new Error('backward Tab at the start was not wrapped');
       if(d.activeElement.id!=='t-b')throw new Error('did not wrap to the last');
       W.UI.modalClose()});
-    t('body scroll is not unlocked while the palette is still open',()=>{
+    t('Escape closes an open modal',()=>{
       W.App.enter('secretary');
       W.UI.modal('<div class="mdl-bd">x</div>','narrow');
-      W.Cmd.open();
-      W.UI.modalClose();
-      if(d.body.style.overflow!=='hidden')throw new Error('scroll unlocked with the palette open');
-      W.Cmd.close();
-      if(d.body.style.overflow)throw new Error('scroll left locked after both closed')});
+      d.dispatchEvent(new W.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+      if(d.getElementById('ovl').classList.contains('on'))throw new Error('Escape did not close modal');
+      if(d.body.style.overflow)throw new Error('scroll left locked after modal close')});
 
     console.log('== FONT SIZE COMPLIANCE (computed) ==');
     /* sweep a KPI-heavy view, a data table and an open modal so the new

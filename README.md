@@ -4,17 +4,20 @@ A complete, single-file front-end for the **Economic Affairs Division (EAD), Gov
 the NGO e-Portal used to register NGOs/NPOs/INGOs, execute Memoranda of Understanding and monitor
 foreign-funded development projects.
 
-Built to BRD v1.1 (`EAD- Updated BRD 1.1`).
+The PDF named `EAD- Updated BRD 1.1` has not reached this workspace. The current portal was built
+from the public EAD NGO Policy and Registration Procedure Guide; **BRD compliance cannot be claimed
+until the BRD is readable.** See [`BRD-RECONCILIATION.md`](BRD-RECONCILIATION.md) for the source map and
+for roles, modules and actions still needing verification.
 
 **v2 — glassmorphism design system, light/dark themes, and a fully redesigned login screen.**
 
-**v3 — floating icon-rail sidebar, command palette (⌘K), and a geometrically-proven no-overlap shell.**
+**v3–v5 — sidebar, accessibility, chart and surface-design improvements.** The command palette,
+icon-rail collapse, role-aware quick action, financial-year selector, CSV export and density toggle
+were later removed as unverified actions.
 
-**v4 — live KPI sparklines, animated counters, per-table density control and CSV export, a full
-accessibility pass, and hardened chart lifecycle.**
-
-**v5 — a whole-portal refinement layer: a formal elevation scale and a consistent depth language
-across every component, machine-proven to touch surface treatment only.**
+**v6 — scope trim:** removed those unverified shell/table/report actions while retaining the visual
+upgrades previously requested. The complete BRD-specific role/module/workflow reconciliation remains
+blocked on the missing PDF.
 
 **Open [`ead-portal.html`](ead-portal.html) directly in any browser.** There is nothing to install,
 build or serve.
@@ -30,11 +33,24 @@ networks that block CDNs — which matters for government deployments behind res
 | | |
 |---|---|
 | File | `ead-portal.html` |
-| Size | ~1.06 MB |
+| Size | ~1.04 MB |
 | External requests | 0 |
 | Font | Manrope only, 400/500/600/700/800 |
 | Type scale | Hard-constrained to 13–16 px (13 / 14 / 15 / 16 only) |
 | Charts | ApexCharts — 50 chart definitions across 8 types |
+
+## Current scope (v6)
+
+Visual upgrades remain: glassmorphism, dark/light theme, redesigned login, floating sidebar, charts,
+and accessibility improvements. To avoid adding unverified actions, the current HTML no longer has a
+command palette, sidebar quick-action/rail-collapse controls, financial-year selector, fake refresh,
+CSV export, density toggle, custom-report builder, or half-yearly reporting option. The topbar keeps record search, the requested
+theme switch, and account/notification controls.
+
+This is a **provisional source-based portal, not a BRD-verified implementation**. Eight role labels and
+seven modules in the current 13-role / 16-module set are marked as inferred in
+[`BRD-RECONCILIATION.md`](BRD-RECONCILIATION.md). Do not treat them as BRD requirements until the
+source document is available.
 
 ## Colour scheme
 
@@ -133,7 +149,11 @@ with `overflow:hidden` so its height is constant and it can never grow the chrom
 Below 980 px wide the card collapses to a single column and the brand pane is hidden, so phones get
 the form only.
 
-## Design system v3 — floating rail, command palette, zero overlap
+## Historical design notes — v3 shell
+
+> **Current-state note (v6):** The command palette, quick-action button, icon-rail collapse and related
+> hotkeys described below have been removed because they were not verified against the missing BRD.
+> This section documents the earlier iteration only; it is not a list of current actions.
 
 ### Sidebar
 
@@ -172,7 +192,7 @@ results are grouped and capped, and the whole thing is keyboard-driven: `↑`/`�
 No browser exists in this sandbox, so `scripts/overlap-audit.py` proves the layout **geometrically**
 by parsing the stylesheet that actually ships and rebuilding the box model of every fixed, sticky and
 absolutely-positioned layer. It also asserts that each rule it models is still present, so editing the
-CSS without updating the model fails loudly instead of passing a stale claim. **49 checks, 0 failures:**
+CSS without updating the model fails loudly instead of passing a stale claim. **The v3 release had 49 checks, 0 failures:**
 
 | Area | What is proved |
 |---|---|
@@ -193,7 +213,11 @@ had inline `min-width` values that could exceed a 320px viewport; a `font-size:0
 rail mode registered as a type-scale violation; and a `22px` login heading override broke the 13–16px
 constraint.
 
-## Enhancements v4 — live data, table controls, accessibility
+## Historical enhancements v4 — sparklines, table tools, accessibility
+
+> **Current-state note (v6):** KPI sparklines, counters and accessibility improvements remain. The
+> CSV export and compact-density controls described below were removed; the older tests in this
+> historical narrative were replaced by assertions that those controls are absent.
 
 ### KPI tiles are alive
 
@@ -251,10 +275,10 @@ a modal, a dropdown and a toast now read as the same material at different heigh
 
 | Token | Use | Light | Dark |
 |---|---|---|---|
-| `--el-1` | controls at rest: buttons, chips, pager, tool icons | 2-layer, 5% | 34% black |
+| `--el-1` | controls at rest: buttons, chips, pager, record search | 2-layer, 5% | 34% black |
 | `--el-2` | cards, KPI tiles, banners, file rows | 2-layer, 6–10% | 42–48% |
 | `--el-3` | dropdowns, toasts, hovered cards | 2-layer, 9–16% | 50–62% |
-| `--el-4` | modal, drawer, command palette | 2-layer, 18–30% | 64–80% |
+| `--el-4` | modal and drawer | 2-layer, 18–30% | 64–80% |
 
 Alongside them: `--hi` / `--hi-soft` (the 1px inner specular highlight that makes glass read as a
 physical sheet) and `--sheen` (a 168° top-left wash). Every component now gets the same treatment.
@@ -267,13 +291,12 @@ physical sheet) and `--sheen` (a 168° top-left wash). Every component now gets 
   letterforms; values use tabular figures.
 - **Tables** — the head gets a gradient wash and an inset rule; hovering a row drives a **gold hairline
   down its leading edge** and darkens the primary cell; the sorted column gets a gold underline rather
-  than only a brighter caret; keyboard focus gets the same affordance as hover; compact density earns
-  zebra striping, which is what actually makes dense tables legible.
+  than only a brighter caret; keyboard focus gets the same affordance as hover.
 - **Forms** — focus now stacks the field ring *and* the tinted `--ring`; an invalid field gives one
   short horizontal nudge; checkboxes, radios and switches get proper cast shadows.
 - **Pills** — warning and danger dots pulse slowly so a live exception catches the eye.
 - **Progress** — a slow travelling highlight sweeps the filled portion only, so a live figure reads as live.
-- **Overlays** — modal, drawer, dropdown, palette and toast all share `--el-3`/`--el-4` and the sheen;
+- **Overlays** — modal, drawer, dropdown and toast share `--el-3`/`--el-4` and the sheen;
   dropdown items slide 2px on hover.
 - **Everything else** — timeline nodes, stepper discs, checklist counters, segmented control, list rows,
   stat tiles, icon chips, empty states, code blocks and the page header, each brought onto the same scale.
@@ -299,11 +322,12 @@ Because the sheen is applied as `background-image` rather than a `::before` over
 the background, underneath content, and can never wash over text or charts. Every animated effect is
 disabled under `prefers-reduced-motion`.
 
-## Roles (13)
+## Roles (13; provisional pending the BRD)
 
 Every role has its own sidebar, dashboard, KPI set and write permissions. Switch between them live
 from the identity chip in the top bar (a demo control; in production the role is derived from the
-account).
+account). Source-backed roles and inferred roles are distinguished in
+[`BRD-RECONCILIATION.md`](BRD-RECONCILIATION.md).
 
 | Role | Organisation | Scope |
 |---|---|---|
@@ -321,7 +345,7 @@ account).
 | External Auditor | Registered audit firm | Audited accounts, third-party evaluation |
 | Public / Visitor | Unregistered | Directory, notifications, tracking, FAQs |
 
-## Modules (16)
+## Modules (16; provisional pending the BRD)
 
 Dashboard · Analytics · MoU Applications · Document Checklist · Security Clearance · MoU Register ·
 Projects (APA) · Donors & Funding · Monitoring & Evaluation · NGO Directory · Reports & Statements ·
@@ -332,7 +356,7 @@ Plus six authentication screens: **Login** (email / CNIC / tracking-ID modes, CA
 **Track application** (public status search with workflow timeline), **Submission receipt** and a
 **public FAQ** page.
 
-## Domain rules encoded from the BRD / NGO Policy 2022
+## Domain rules encoded from public EAD sources (BRD reconciliation pending)
 
 - 13-section document checklist, Basic Information locked after submission
 - 7 MB per upload; DOC, PDF, XLSX, JPEG, PNG; e-signature image max 25 KB
@@ -353,39 +377,29 @@ selects which workspace you enter.
 
 ## Verification
 
-Validated headlessly: 129 role × view renders, all 50 chart builders producing well-formed configs
-(with Manrope enforced on chart, axis, legend and tooltip text), every modal, auth flow, filter,
-sort, pagination and tab — **0 errors**. Tag balance and structural integrity verified on the
-markup; computed font sizes swept across 1,661 rendered elements with **0 values outside 13–16 px**.
+Run all checks with `bash scripts/run-checks.sh`. The current v6 artifact passes:
 
-v2 added: theme flip / persist / restore, palette re-derivation into the dark series, `App.refreshCharts()`
-on every theme switch, a full 129-view render pass **in dark mode**, an `.ic` sizing audit over every
-SVG in every view, the new login structure, and the login height budget above (13 viewport heights,
-all fitting without a scrollbar). **0 errors, 0 warnings.**
+- Inline JavaScript syntax: **PASS**.
+- Headless suite: **129 permitted role × view renders**, 50/50 ApexCharts option builders, modal/auth
+  flows, table filters and pagination, basic record search, theme switching, and assertions that the
+  removed command palette/table tools are absent — **0 errors / 0 warnings**.
+- Computed font sweep: **1,733 elements**, zero values outside 13–16 px.
+- Geometric overlap audit: **55 PASS / 0 FAIL** across sidebar/main gutter, 320–1920 px topbar
+  widths, stacking order, sticky headers, viewport-clamped overlays, theme surfaces and the v5
+  surface-only refinement layer.
+- Login height budget: **14 viewport heights** (1080 px down to 600 px), all fit without a vertical
+  scrollbar.
+- Markup balance and duplicate-ID checks: **PASS**.
 
-`scripts/login-height-budget.py` reproduces the height budget by parsing the stylesheet that ships in
-the HTML, so the no-scroll claim can be re-checked after any CSS edit.
+The automated suite uses jsdom; there is no real browser binary in this sandbox, so pixel rendering
+has not been visually inspected here. Geometry, height budgets and app behavior are tested
+programmatically instead.
 
-v5 added: six more audit checks (now **56, 0 failures**) that parse the refinement layer and enforce
-the surface-only contract described above.
+## BRD status and source provenance
 
-v4 added: 11 more tests — sparkline determinism, bounds, seed sensitivity and trend direction;
-one sparkline per KPI tile with valid 12-point data; sparkline remount across a theme switch;
-teardown tracking; counter coverage with non-numeric values left alone; count-up settling on the
-exact target; tool injection into all six data-table views without double-injection; density
-toggle/persist/`aria-pressed`; CSV row-count accuracy; and the empty-table guard. Plus seven
-accessibility tests (skip link position, landmarks, live regions, `aria-current` following
-navigation, `aria-expanded` tracking, dialog focus management, and Tab wrapping at both ends).
-The computed font sweep now covers 1,759 elements — up from 1,622 — because it renders a
-KPI-heavy view, a data table and a modal first, so the new sparkline strips, counters and injected
-toolbar buttons are all measured. **0 values outside 13–16 px.**
-
-`scripts/run-checks.sh` runs all five passes end to end (installing jsdom into a scratch directory
-on first use) and exits non-zero on any failure.
-
-v3 added: 15 shell tests (rail sidebar structure, topbar structure, tooltips, rail persistence, the
-role-aware quick action across all 13 roles, palette structure, per-role module permission filtering,
-search ranking, keyboard navigation, module navigation, record deep-linking, command execution and
-Escape precedence), plus `scripts/overlap-audit.py` (49 geometric checks) and
-`scripts/markup-balance.py` (tag balance, duplicate IDs, structural assertions). All suites report
-**0 errors, 0 warnings, 0 failures**.
+The BRD attachment notification appeared, but the PDF itself was not written into the workspace.
+The portal therefore cannot yet be certified against `EAD- Updated BRD 1.1`. The current version
+only removes clearly unverified interface/report controls; the 13 roles, 16 modules, data fields,
+statuses and workflows still need an exact comparison with the BRD. See
+[`BRD-RECONCILIATION.md`](BRD-RECONCILIATION.md). Reattach the PDF or paste the BRD text before
+calling this implementation BRD-complete.

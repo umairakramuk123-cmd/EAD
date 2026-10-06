@@ -114,7 +114,7 @@ function(){function t(t){t.remember("_draggable",this),this.el=t}t.prototype.ini
 
   /* Geometry */
   --r-xs:6px; --r-sm:9px; --r-md:13px; --r-lg:17px; --r-xl:22px; --r-2xl:28px;
-  --sb-w:266px; --sb-rail:78px; --sb-gut:14px; --tb-h:62px;
+  --sb-w:266px; --sb-gut:14px; --tb-h:62px;
 }
 
 /* ---------------- DARK THEME ---------------- */
@@ -485,20 +485,7 @@ svg{display:block}
 .sb-x:hover{background:rgba(255,255,255,.14);color:#fff}
 .sb-x svg{width:14px;height:14px}
 
-/* Quick action */
-.sb-qa{padding:0 12px 11px;flex:none}
-.sb-qabtn{
-  width:100%;height:38px;display:flex;align-items:center;gap:9px;padding:0 11px;cursor:pointer;
-  border-radius:var(--r-sm);border:1px solid rgba(233,203,106,.42);color:#2A2105;
-  background:linear-gradient(150deg,#EFCE6D,#C29A22);font-size:var(--fs-13);font-weight:800;
-  letter-spacing:-.006em;white-space:nowrap;overflow:hidden;
-  box-shadow:0 6px 18px -8px rgba(201,162,39,.85),inset 0 1px 0 rgba(255,255,255,.5);
-  transition:transform .16s cubic-bezier(.34,1.4,.64,1),box-shadow .2s,filter .2s;
-}
-.sb-qabtn:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 10px 24px -8px rgba(201,162,39,.95),inset 0 1px 0 rgba(255,255,255,.55)}
-.sb-qabtn:active{transform:translateY(0) scale(.99)}
-.sb-qabtn svg{width:15px;height:15px;flex:none}
-.sb-qabtn .lbl{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis}
+
 
 /* Nav */
 .sb-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 0 12px;scrollbar-width:thin}
@@ -572,34 +559,9 @@ svg{display:block}
 }
 .sb-out:hover{background:rgba(196,70,58,.28);border-color:rgba(226,120,108,.5);color:#FFD9D3}
 .sb-out svg{width:14px;height:14px}
-.sb-collapse{
-  display:flex;align-items:center;justify-content:center;gap:8px;height:31px;width:100%;cursor:pointer;
-  border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);
-  color:var(--sb-mut);font-size:var(--fs-13);font-weight:700;transition:.18s;
-}
-.sb-collapse:hover{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.2)}
-.sb-collapse svg{width:15px;height:15px;flex:none;transition:transform .32s cubic-bezier(.4,0,.2,1)}
 
-/* ---- Collapsed rail mode ---- */
-html.sb-rail .sb{width:var(--sb-rail)}
-html.sb-rail .main{margin-left:calc(var(--sb-rail) + var(--sb-gut) * 2)}
-html.sb-rail .sb-hd{justify-content:center;padding:13px 0 12px}
-html.sb-rail .sb-hd .bt{display:none}
-html.sb-rail .sb-qa{padding:0 12px 11px}
-html.sb-rail .sb-qabtn{padding:0;justify-content:center}
-html.sb-rail .sb-qabtn .lbl{display:none}
-html.sb-rail .sb-grp{padding:13px 0 7px;justify-content:center}
-html.sb-rail .sb-grp span{display:none}
-html.sb-rail .sb-grp::after{display:none}
-html.sb-rail .sb-grp::before{content:"";width:22px;height:1px;background:var(--sb-line)}
-html.sb-rail .sb-i{justify-content:center;padding:0;margin:2px 12px}
-html.sb-rail .sb-i .lbl,html.sb-rail .sb-i .sb-n{display:none}
-html.sb-rail .sb-i.on::before{top:9px;bottom:9px}
-html.sb-rail .sb-status{display:none}
-html.sb-rail .sb-role{justify-content:center;padding:7px 0}
-html.sb-rail .sb-role .who,html.sb-rail .sb-out{display:none}
-html.sb-rail .sb-collapse svg{transform:rotate(180deg)}
-html.sb-rail .sb-collapse .lbl{display:none}
+
+
 
 /* ---- Main column ---- */
 .main{
@@ -607,7 +569,7 @@ html.sb-rail .sb-collapse .lbl{display:none}
   display:flex;flex-direction:column;transition:margin .32s cubic-bezier(.4,0,.2,1);
 }
 
-/* ---- Topbar: frosted command bar ---- */
+/* ---- Topbar: frosted record-search bar ---- */
 .tb{
   height:var(--tb-h);flex:none;background:var(--tb-bg);
   -webkit-backdrop-filter:blur(22px) saturate(185%);backdrop-filter:blur(22px) saturate(185%);
@@ -621,22 +583,28 @@ html.sb-rail .sb-collapse .lbl{display:none}
 .crumb svg{width:13px;height:13px;color:var(--ink-300);flex:none}
 .tb-sp{flex:1 1 auto;min-width:0}
 
-/* Command-palette trigger — shrinks to nothing rather than overflowing the bar */
-.cmdk{
+/* Topbar record search — shrinks to nothing rather than overflowing the bar */
+.tb-search{
   display:flex;align-items:center;gap:9px;flex:1 1 auto;min-width:0;max-width:430px;height:36px;
-  padding:0 8px 0 11px;border-radius:var(--r-sm);cursor:pointer;text-align:left;
+  padding:0 6px 0 11px;border-radius:var(--r-sm);
   border:1px solid var(--line);background:var(--sunken);color:var(--ink-400);
-  transition:border-color .18s,background .18s,box-shadow .18s,transform .18s;
+  transition:border-color .18s,background .18s,box-shadow .18s;
 }
-.cmdk:hover{border-color:var(--g400);background:var(--inp-bg-focus);box-shadow:var(--inp-focus-sh)}
-.cmdk:active{transform:scale(.995)}
-.cmdk svg.ci{width:15px;height:15px;flex:none;color:var(--ink-400)}
-.cmdk .ph{flex:1;min-width:0;font-size:var(--fs-13);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cmdk kbd{
-  flex:none;height:20px;min-width:22px;padding:0 5px;border-radius:6px;border:1px solid var(--line-strong);
-  background:var(--raise);font-size:var(--fs-13);color:var(--ink-500);font-weight:700;
-  display:grid;place-items:center;font-family:inherit;box-shadow:0 1px 0 var(--line-strong);
+.tb-search:focus-within{border-color:var(--g400);background:var(--inp-bg-focus);box-shadow:var(--inp-focus-sh)}
+.tb-search > svg{width:15px;height:15px;flex:none;color:var(--ink-400)}
+.tb-search input{
+  flex:1;min-width:0;border:none;background:none;outline:none;padding:0;font-family:inherit;
+  font-size:var(--fs-13);font-weight:500;color:var(--ink-900);letter-spacing:-.006em;
 }
+.tb-search input::placeholder{color:var(--ink-300);font-weight:500}
+.tb-search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.tb-search .go{
+  flex:none;height:26px;padding:0 11px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--g300);background:var(--g50);color:var(--g700);
+  font-size:var(--fs-13);font-weight:700;transition:.16s;
+}
+.tb-search .go:hover{background:var(--g100);border-color:var(--g400)}
+[data-theme="dark"] .tb-search .go{background:rgba(34,165,124,.18);border-color:rgba(79,188,151,.42);color:var(--g200)}
 .tb-btn{
   width:35px;height:35px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--sunken);
   display:grid;place-items:center;cursor:pointer;color:var(--ink-600);position:relative;transition:.18s;flex:none;
@@ -649,15 +617,7 @@ html.sb-rail .sb-collapse .lbl{display:none}
   background:linear-gradient(160deg,#D2574A,#96281D);color:#fff;font-size:var(--fs-13);font-weight:800;
   display:grid;place-items:center;border:2px solid var(--bg);line-height:1;
 }
-.fy-pick{
-  display:flex;align-items:center;gap:7px;height:35px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;
-  border:1px solid var(--line);background:var(--sunken);color:var(--ink-700);font-size:var(--fs-13);
-  font-weight:700;transition:.18s;flex:none;white-space:nowrap;
-}
-.fy-pick:hover{border-color:var(--g300);background:var(--raise);color:var(--g600);transform:translateY(-1px)}
-[data-theme="dark"] .fy-pick:hover{color:var(--g200)}
-.fy-pick svg{width:15px;height:15px;flex:none;opacity:.8}
-.fy-pick .cv{width:13px;height:13px;opacity:.6}
+
 .rolepick{
   display:flex;align-items:center;gap:8px;height:36px;padding:0 7px 0 8px;border-radius:var(--r-sm);
   border:1px solid var(--line-strong);background:var(--sunken);cursor:pointer;transition:.18s;
@@ -775,23 +735,7 @@ html.sb-rail .sb-collapse .lbl{display:none}
 /* Toolbar */
 .tbar{display:flex;align-items:center;gap:9px;padding:12px 17px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
 .tbar .sp{flex:1}
-/* injected table tools */
-.tb-tools{display:flex;align-items:center;gap:7px;flex:none}
-.tb-ic{
-  width:32px;height:32px;border-radius:var(--r-xs);border:1px solid var(--line);background:var(--sunken);
-  display:grid;place-items:center;cursor:pointer;color:var(--ink-500);transition:.18s;flex:none;
-}
-.tb-ic:hover{background:var(--raise);border-color:var(--g300);color:var(--g600);transform:translateY(-1px)}
-[data-theme="dark"] .tb-ic:hover{color:var(--g200)}
-.tb-ic svg{width:15px;height:15px}
-.tb-ic[aria-pressed="true"]{background:var(--g50);border-color:var(--g400);color:var(--g700)}
-[data-theme="dark"] .tb-ic[aria-pressed="true"]{background:rgba(34,165,124,.18);border-color:rgba(79,188,151,.42);color:var(--g200)}
-/* compact density */
-body.dense .tbl tbody td{padding:5px 12px}
-body.dense .tbl thead th{height:33px}
-body.dense .body{padding:14px 16px}
-body.dense .pager{padding:8px 17px}
-body.dense .li{padding:8px 14px}
+
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{
   height:29px;padding:0 12px;border-radius:20px;border:1px solid var(--line);background:var(--sunken);
@@ -986,64 +930,7 @@ body.dense .li{padding:8px 14px}
 .tb-act{display:flex;align-items:center;gap:9px;margin-left:auto;flex:none;min-width:0}
 .app-ft{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%)}
 
-/* ============================================================
-   COMMAND PALETTE  (⌘K / Ctrl+K / "/")
-   ============================================================ */
-.cmdk-ovl{
-  position:fixed;inset:0;z-index:250;display:none;align-items:flex-start;justify-content:center;
-  padding:min(13vh,116px) 18px 18px;background:rgba(3,26,19,.44);
-  -webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%);
-}
-[data-theme="dark"] .cmdk-ovl{background:rgba(0,0,0,.62)}
-.cmdk-ovl.on{display:flex;animation:fade .16s ease}
-.cmdk-pnl{
-  width:min(664px,100%);max-height:min(72vh,600px);display:flex;flex-direction:column;overflow:hidden;
-  border-radius:var(--r-xl);border:1px solid var(--glass-brd);background:var(--card-bg-solid);
-  box-shadow:0 54px 120px -42px rgba(2,20,14,.85),0 4px 18px rgba(2,20,14,.26),inset 0 1px 0 var(--glass-hi);
-  animation:cmdIn .26s cubic-bezier(.34,1.28,.64,1) both;
-}
-@keyframes cmdIn{from{opacity:0;transform:translateY(-12px) scale(.984)}to{opacity:1;transform:none}}
-.cmdk-in{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--line);flex:none}
-.cmdk-in > svg{width:18px;height:18px;color:var(--ink-400);flex:none}
-.cmdk-in input{
-  flex:1;min-width:0;border:none;background:none;outline:none;font-family:inherit;
-  font-size:var(--fs-16);font-weight:600;color:var(--ink-900);letter-spacing:-.012em;padding:0;
-}
-.cmdk-in input::placeholder{color:var(--ink-300);font-weight:500}
-.cmdk-in kbd{
-  flex:none;height:21px;min-width:24px;padding:0 6px;border-radius:6px;border:1px solid var(--line-strong);
-  background:var(--raise);font-size:var(--fs-13);color:var(--ink-500);font-weight:700;
-  display:grid;place-items:center;font-family:inherit;box-shadow:0 1px 0 var(--line-strong);cursor:pointer;
-}
-.cmdk-res{flex:1;min-height:0;overflow-y:auto;padding:7px;scrollbar-width:thin}
-.cmdk-g{
-  display:flex;align-items:center;gap:8px;padding:10px 10px 5px;font-size:var(--fs-13);font-weight:800;
-  color:var(--ink-400);letter-spacing:.095em;text-transform:uppercase;
-}
-.cmdk-g::after{content:"";flex:1;height:1px;background:var(--line-soft)}
-.cmdk-r{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;border:1px solid transparent;transition:background .13s,border-color .13s}
-.cmdk-r .tx{flex:1;min-width:0}
-.cmdk-r .tx b{display:block;font-size:var(--fs-14);font-weight:700;color:var(--ink-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.006em}
-.cmdk-r .tx span{display:block;font-size:var(--fs-13);color:var(--ink-400);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.cmdk-r .go{width:14px;height:14px;color:var(--ink-300);flex:none;opacity:0;transition:opacity .13s,transform .18s}
-.cmdk-r.sel{background:var(--g50);border-color:var(--g300);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
-[data-theme="dark"] .cmdk-r.sel{background:rgba(34,165,124,.17);border-color:rgba(79,188,151,.36);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-.cmdk-r.sel .go{opacity:1;color:var(--g600)}
-[data-theme="dark"] .cmdk-r.sel .go{color:var(--g200)}
-.cmdk-r.sel .tx b{color:var(--g800)}
-[data-theme="dark"] .cmdk-r.sel .tx b{color:#fff}
-.cmdk-empty{padding:38px 18px;text-align:center;color:var(--ink-400);font-size:var(--fs-14);font-weight:600}
-.cmdk-empty b{display:block;font-size:var(--fs-15);color:var(--ink-700);font-weight:800;margin-bottom:4px}
-.cmdk-ft{
-  flex:none;display:flex;align-items:center;gap:15px;padding:9px 14px;border-top:1px solid var(--line);
-  background:var(--foot);font-size:var(--fs-13);color:var(--ink-400);font-weight:600;flex-wrap:wrap;
-}
-.cmdk-ft span{display:flex;align-items:center;gap:5px}
-.cmdk-ft kbd{
-  height:19px;min-width:19px;padding:0 4px;border-radius:5px;border:1px solid var(--line-strong);
-  background:var(--raise);font-size:var(--fs-13);color:var(--ink-500);font-weight:800;
-  display:grid;place-items:center;font-family:inherit;line-height:1;
-}
+
 
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.982)}to{opacity:1;transform:none}}
@@ -1213,49 +1100,25 @@ body.dense .li{padding:8px 14px}
 .empty span{display:block;font-size:var(--fs-13);color:var(--ink-400);font-weight:500;margin-top:4px;max-width:38ch;margin-left:auto;margin-right:auto}
 .mob-tb-btn{display:none}
 /* Progressive collapse of the topbar so it can never overflow or overlap.
-   .crumb and .cmdk both have min-width:0, so the row always shrinks safely. */
-@media(max-width:1420px){.cmdk{max-width:340px}}
-@media(max-width:1240px){.cmdk{max-width:250px}}
-@media(max-width:1160px){
-  .fy-pick{width:35px;padding:0;justify-content:center}
-  .fy-pick #fy-lbl,.fy-pick .cv{display:none}
-}
+   .crumb and .tb-search both have min-width:0, so the row always shrinks safely. */
+@media(max-width:1420px){.tb-search{max-width:340px}}
+@media(max-width:1240px){.tb-search{max-width:250px}}
 @media(max-width:1080px){
-  /* sidebar becomes an overlay drawer; rail mode is switched off below this width */
+  /* sidebar becomes an overlay drawer below this width */
   .sb{transform:translateX(calc(-100% - var(--sb-gut) * 2 - 6px));width:var(--sb-w)}
   .sb.open{transform:none;box-shadow:0 46px 100px -28px rgba(0,0,0,.8)}
-  .main,html.sb-rail .main{margin-left:0}
+  .main{margin-left:0}
   .mob-tb-btn{display:grid}
   .sb-x{display:grid}
-  .sb-collapse{display:none}
   .sb-bk{position:fixed;inset:0;background:rgba(3,26,19,.52);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:79;display:none}
   .sb-bk.on{display:block}
-  html.sb-rail .sb-hd{justify-content:flex-start;padding:13px}
-  html.sb-rail .sb-hd .bt{display:block}
-  html.sb-rail .sb-qabtn{padding:0 11px;justify-content:flex-start}
-  html.sb-rail .sb-qabtn .lbl{display:block}
-  html.sb-rail .sb-grp{padding:14px 16px 6px;justify-content:flex-start}
-  html.sb-rail .sb-grp span{display:inline}
-  html.sb-rail .sb-grp::before{display:none}
-  html.sb-rail .sb-grp::after{display:block}
-  html.sb-rail .sb-i{justify-content:flex-start;padding:0 11px;margin:2px 10px}
-  html.sb-rail .sb-i .lbl{display:block}
-  html.sb-rail .sb-i .sb-n{display:grid}
-  html.sb-rail .sb-status{display:flex}
-  html.sb-rail .sb-role{justify-content:flex-start;padding:8px}
-  html.sb-rail .sb-role .who{display:block}
-  html.sb-rail .sb-out{display:grid}
 }
 @media(max-width:960px){
-  .cmdk{flex:0 0 auto;width:36px;max-width:36px;padding:0;justify-content:center}
-  .cmdk .ph,.cmdk kbd{display:none}
-  .tb-refresh{display:none}
+  .tb-search .go{display:none}
   .body{padding:14px}
 }
 @media(max-width:760px){
   .crumb .c:not(.now),.crumb svg{display:none}
-  .cmdk-ovl{padding:12px}
-  .cmdk-pnl{max-height:calc(100dvh - 24px)}
 }
 @media(max-width:560px){
   .rolepick .txt{display:none}
@@ -1264,7 +1127,6 @@ body.dense .li{padding:8px 14px}
   .page-hd .act .btn{flex:1}
   .app-ft a,.app-ft .pill{display:none}
   #dd-me{display:none}
-  .cmdk-ft span:nth-child(n+3){display:none}
 }
 @media print{
   .sb,.tb,.page-hd .act,.pager,.tbar,#toasts,body::before,body::after{display:none!important}
@@ -1637,9 +1499,6 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
 .tbl .cell-main{letter-spacing:-.008em}
 .tbl .num{font-variant-numeric:tabular-nums lining-nums}
 .tbl tfoot td{box-shadow:var(--hi-soft)}
-/* compact mode earns zebra striping, which is what makes dense tables legible */
-body.dense .tbl tbody tr:nth-child(even){background:var(--sunken)}
-body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
 
 /* ---- 5. buttons ---- */
 .btn:focus-visible{outline:none;box-shadow:var(--ring),var(--el-1)}
@@ -1657,7 +1516,7 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
 .chip{box-shadow:var(--el-1)}
 .chip.on{box-shadow:0 3px 12px -3px rgba(10,77,56,.42),var(--hi-soft)}
 .chip .ct{font-variant-numeric:tabular-nums}
-.tb-btn,.fy-pick,.rolepick,.pg,.tb-ic{box-shadow:var(--el-1)}
+.tb-btn,.rolepick,.pg,.tb-search{box-shadow:var(--el-1)}
 .tb-btn .bdg{box-shadow:0 2px 7px -1px rgba(150,40,29,.55)}
 
 /* ---- 7. forms ---- */
@@ -1717,9 +1576,6 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
 .dd-i{transition:background .15s,color .15s,transform .15s}
 .dd-i:hover{transform:translateX(2px)}
 #toasts .toast,.toast{box-shadow:var(--el-3),var(--hi)}
-.cmdk-pnl{background-image:var(--sheen);box-shadow:var(--el-4),var(--hi)}
-.cmdk-in{background-image:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,0))}
-[data-theme="dark"] .cmdk-in{background-image:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0))}
 
 /* ---- 11. list rows, stats, misc blocks ---- */
 .li{transition:background .15s,box-shadow .18s}
@@ -1744,7 +1600,7 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
 @media(prefers-reduced-motion:reduce){
   .prg > i::after,.pill-danger .dot,.pill-warn .dot{animation:none}
   .inp.err,.sel.err,.ta.err{animation:none}
-  .tb-btn:hover,.chip:hover,.fy-pick:hover,.rolepick:hover,.tb-ic:hover,.dd-i:hover{transform:none}
+  .tb-btn:hover,.chip:hover,.rolepick:hover,.dd-i:hover{transform:none}
 }
 </style>
 </head>
@@ -2288,12 +2144,6 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
         <button class="sb-x" onclick="App.toggleSb(false)" aria-label="Close menu"><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg></button>
       </div>
 
-      <div class="sb-qa">
-        <button class="sb-qabtn" id="sb-qa" onclick="App.quickAction()" title="New MoU application">
-          <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg><span class="lbl" id="sb-qa-l">New MoU application</span>
-        </button>
-      </div>
-
       <nav class="sb-scroll" id="sb-nav" aria-label="Modules"></nav>
 
       <div class="sb-ft">
@@ -2303,9 +2153,6 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
           <span class="who"><b id="sb-name">&mdash;</b><span id="sb-role">&mdash;</span></span>
           <button class="sb-out" onclick="App.logout()" title="Sign out" aria-label="Sign out"><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-out"/></svg></button>
         </div>
-        <button class="sb-collapse" id="sb-collapse" onclick="App.toggleRail()" title="Collapse sidebar" aria-label="Collapse sidebar">
-          <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevrons"/></svg><span class="lbl">Collapse</span>
-        </button>
       </div>
     </aside>
 
@@ -2316,26 +2163,16 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
       <header class="tb">
         <button class="tb-btn mob-tb-btn" onclick="App.toggleSb(true)" aria-label="Open menu"><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-menu"/></svg></button>
         <div class="crumb" id="crumb"></div>
-        <button class="cmdk" id="cmdk-btn" onclick="Cmd.open()" title="Search modules, records and run commands" aria-label="Search and commands">
+        <form class="tb-search" role="search" onsubmit="App.quickSearch(this.elements.q.value);return false">
           <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-search"/></svg>
-          <span class="ph">Search modules, NGOs, MoUs, projects&hellip;</span>
-          <kbd id="cmdk-kbd">/</kbd>
-        </button>
+          <input name="q" type="search" placeholder="Search NGOs, MoUs, projects&hellip;" autocomplete="off" spellcheck="false" aria-label="Search records">
+          <button class="go" type="submit">Search</button>
+        </form>
         <div class="tb-act">
-        <div class="dd" id="dd-fy">
-          <button class="fy-pick" onclick="UI.dd('dd-fy')" title="Financial year"><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg><span id="fy-lbl">FY 2025-26</span><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg></button>
-          <div class="dd-m left" style="min-width:min(170px,calc(100vw - 24px))">
-            <div class="dd-h">Financial Year</div>
-            <button class="dd-i" onclick="App.setFY('FY 2023-24',this)">FY 2023-24</button>
-            <button class="dd-i" onclick="App.setFY('FY 2024-25',this)">FY 2024-25</button>
-            <button class="dd-i on" onclick="App.setFY('FY 2025-26',this)">FY 2025-26 <svg style="margin-left:auto;width:14px;height:14px"><use href="#i-check"/></svg></button>
-          </div>
-        </div>
         <button class="thm" onclick="Theme.toggle()" title="Toggle light / dark theme" aria-label="Toggle theme">
           <svg class="ic sun" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-sun"/></svg>
           <svg class="ic moon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-moon"/></svg>
         </button>
-        <button class="tb-btn tb-refresh" onclick="App.toast('Data refreshed','All figures re-synced with the EAD record room.','info')" title="Refresh"><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-refresh"/></svg></button>
         <div class="dd" id="dd-bell">
           <button class="tb-btn" onclick="UI.dd('dd-bell')" title="Notifications"><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg><span class="bdg" id="bell-n">6</span></button>
           <div class="dd-m" style="min-width:min(340px,calc(100vw - 24px));padding:0">
@@ -2391,24 +2228,6 @@ body.dense .tbl tbody tr:nth-child(even):hover{background:var(--hover)}
 </div>
 
 <div class="ovl" id="ovl" onclick="if(event.target===this)UI.modalClose()"><div id="ovl-c"></div></div>
-<!-- Command palette (⌘K) -->
-<div class="cmdk-ovl" id="cmdk-ovl" onclick="if(event.target===this)Cmd.close()">
-  <div class="cmdk-pnl" role="dialog" aria-modal="true" aria-label="Command palette">
-    <div class="cmdk-in">
-      <svg class="ic" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-search"/></svg>
-      <input id="cmdk-q" type="text" placeholder="Jump to a module, find a record, run a command…" autocomplete="off" spellcheck="false"
-             oninput="Cmd.filter(this.value)" onkeydown="return Cmd.key(event)">
-      <kbd onclick="Cmd.close()" title="Close">Esc</kbd>
-    </div>
-    <div class="cmdk-res" id="cmdk-res"></div>
-    <div class="cmdk-ft">
-      <span><kbd>&uarr;</kbd><kbd>&darr;</kbd>to navigate</span>
-      <span><kbd>&crarr;</kbd>to select</span>
-      <span><kbd>esc</kbd>to dismiss</span>
-      <span style="margin-left:auto;color:var(--ink-300)">EAD e-Portal &middot; BRD v1.1</span>
-    </div>
-  </div>
-</div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <script>
 /* ============================================================
@@ -2677,8 +2496,7 @@ const UI={
   modalClose(){
     const o=document.getElementById('ovl');
     o.classList.remove('on');document.getElementById('ovl-c').innerHTML='';
-    const co=document.getElementById('cmdk-ovl');
-    if(!co||!co.classList.contains('on'))document.body.style.overflow='';
+    document.body.style.overflow='';
     const back=this._lastFocus;this._lastFocus=null;
     if(back&&back.isConnected)setTimeout(()=>{try{back.focus()}catch(e){}},0);
   },
@@ -2766,110 +2584,6 @@ const Theme={
   }
 };
 
-/* ============================================================
-   COMMAND PALETTE — jump to modules, find records, run commands
-   ============================================================ */
-const Cmd={
-  all:[], rows:[], sel:0, _on:false,
-  isOpen(){return this._on},
-  build(){
-    const r=ROLE(App.role), out=[], can=v=>canView(r,v);
-    // Commands first: they are the default view of the palette
-    out.push({g:'Commands',ic:'contrast',t:'Toggle light / dark theme',s:'Appearance — saved on this device',run(){Theme.toggle()}});
-    out.push({g:'Commands',ic:'chevrons',t:'Collapse or expand the sidebar',s:'Layout preference',run(){App.toggleRail()}});
-    out.push({g:'Commands',ic:'cal',t:'Change financial year',s:'Currently '+App.fy,run(){Cmd.close();UI.dd('dd-fy')}});
-    out.push({g:'Commands',ic:'refresh',t:'Re-sync data',s:'Refresh every figure on the current view',run(){App.toast('Data refreshed','All figures re-synced with the EAD record room.','info')}});
-    out.push({g:'Commands',ic:'print',t:'Print current view',s:'Opens the browser print dialog',run(){window.print()}});
-    if(can('help'))out.push({g:'Commands',ic:'help',t:'Help & FAQs',s:'NGO Policy guidance and portal help',run(){App.nav('help')}});
-    out.push({g:'Commands',ic:'out',t:'Sign out',s:'End this session securely',run(){App.logout()}});
-    // Modules the current role may actually open
-    MENU.forEach(g=>g.items.forEach(i=>{
-      if(!can(i.id))return;
-      const t=VIEW_T[i.id]||[i.label,''];
-      out.push({g:'Modules',ic:i.icon,t:(t[0]||i.label).replace(/&amp;/g,'&'),s:g.g+' — '+(t[1]||''),run(){App.nav(i.id)}});
-    }));
-    // Records — only for modules this role can reach
-    const deep=(view,ic,fn)=>{ if(!can(view))return fn };
-    if(can('ngos'))     DATA.ngos.forEach(n=>out.push({g:'NGOs',ic:'building',t:n.name,s:n.id+' · '+n.type+' · '+n.status,run(){App.nav('ngos');Views.openNgo(n.id)}}));
-    if(can('applications'))DATA.apps.forEach(a=>out.push({g:'MoU applications',ic:'file',t:a.ngo,s:a.track+' · '+a.stage,run(){App.nav('applications');Views.openApp(a.id)}}));
-    if(can('mou'))      DATA.mous.forEach(m=>out.push({g:'MoU register',ic:'award',t:m.ngo,s:m.id+' · '+m.status+' · expires '+m.expiry,run(){App.nav('mou');Views.openMou(m.id)}}));
-    if(can('projects')) DATA.projects.forEach(pr=>out.push({g:'Projects',ic:'layers',t:pr.name,s:pr.id+' · '+pr.donor+' · '+pr.status,run(){App.nav('projects');Views.openPrj(pr.id)}}));
-    if(can('clearance'))DATA.clr.forEach(c=>out.push({g:'Security clearance',ic:'shield',t:c.ngo,s:c.id+' · '+c.agency+' · '+c.status,run(){App.nav('clearance');Views.openClr(c.id)}}));
-    this.all=out;
-  },
-  score(it,q){
-    const t=it.t.toLowerCase(), sb=(it.s||'').toLowerCase();
-    if(t===q)return 1e4;
-    if(t.startsWith(q))return 8e3-t.length;
-    let w=t.indexOf(' '+q); if(w>=0)return 7e3-w;
-    let i=t.indexOf(q);     if(i>=0)return 6e3-i;
-    let j=sb.indexOf(q);    if(j>=0)return 4e3-j;
-    let k=0; for(let c=0;c<t.length&&k<q.length;c++) if(t[c]===q[k])k++;
-    if(k===q.length)return 2e3-t.length;
-    return -1;
-  },
-  filter(q){
-    q=(q||'').trim().toLowerCase();
-    if(!q){
-      // default list: commands then modules, no records
-      this.rows=this.all.filter(x=>x.g==='Commands'||x.g==='Modules').slice(0,26);
-    }else{
-      this.rows=this.all.map(x=>({x,s:this.score(x,q)})).filter(o=>o.s>=0)
-        .sort((a,b)=>b.s-a.s).slice(0,26).map(o=>o.x);
-    }
-    this.sel=0; this.paint();
-  },
-  paint(){
-    const host=document.getElementById('cmdk-res');
-    if(!this.rows.length){
-      host.innerHTML='<div class="cmdk-empty"><b>No matches</b>Try an NGO name, a tracking ID such as EAD-2026-NGO-004812, or a module name.</div>';
-      return;
-    }
-    let h='',last='';
-    this.rows.forEach((r,i)=>{
-      if(r.g!==last){last=r.g;h+='<div class="cmdk-g">'+r.g+'</div>'}
-      h+='<div class="cmdk-r'+(i===this.sel?' sel':'')+'" data-i="'+i+'" onmouseenter="Cmd.hover('+i+')" onclick="Cmd.run('+i+')">'
-        +'<span class="ic-chip sm">'+I(r.ic,'',2.2)+'</span>'
-        +'<span class="tx"><b>'+r.t+'</b>'+(r.s?'<span>'+r.s+'</span>':'')+'</span>'
-        +I('right','go',2.4)+'</div>';
-    });
-    host.innerHTML=h;
-    const el=host.querySelector('.cmdk-r.sel'); if(el)el.scrollIntoView({block:'nearest'});
-  },
-  hover(i){ if(i===this.sel)return; this.sel=i;
-    document.querySelectorAll('#cmdk-res .cmdk-r').forEach((el,k)=>el.classList.toggle('sel',k===i)); },
-  move(d){
-    if(!this.rows.length)return;
-    this.sel=(this.sel+d+this.rows.length)%this.rows.length; this.paint();
-  },
-  run(i){
-    const r=this.rows[i===undefined?this.sel:i]; if(!r)return;
-    this.close(); try{r.run()}catch(e){console.warn(e)}
-  },
-  key(e){
-    if(e.key==='ArrowDown'){e.preventDefault();this.move(1);return false}
-    if(e.key==='ArrowUp'){e.preventDefault();this.move(-1);return false}
-    if(e.key==='Enter'){e.preventDefault();this.run();return false}
-    if(e.key==='Escape'){e.preventDefault();this.close();return false}
-    if(e.key==='Tab'){e.preventDefault();this.move(e.shiftKey?-1:1);return false}
-    return true;
-  },
-  open(){
-    if(!document.getElementById('app').classList.contains('on'))return;
-    UI.ddClose(); this.build();
-    const o=document.getElementById('cmdk-ovl');
-    o.classList.add('on'); this._on=true;
-    document.body.style.overflow='hidden';
-    const q=document.getElementById('cmdk-q'); q.value=''; this.filter('');
-    setTimeout(()=>q.focus(),30);
-  },
-  close(){
-    const o=document.getElementById('cmdk-ovl');
-    if(!o)return;
-    o.classList.remove('on'); this._on=false;
-    if(!document.getElementById('ovl').classList.contains('on'))document.body.style.overflow='';
-  }
-};
 
 /* ============================================================
    AUTH — login / signup / recovery / tracking
@@ -3043,44 +2757,7 @@ const Auth={
    APP — shell, routing, role switching
    ============================================================ */
 const App={
-  role:'secretary', view:'dashboard', fy:'FY 2025-26', charts:[], state:{},
-  /* role-aware primary action shown at the top of the sidebar */
-  QA:{
-    ngo_admin:['checklist','Continue application'],
-    ngo_pm:['checklist','Continue application'],
-    moi:['clearance','Review clearance requests'],
-    auditor:['mne','Upload audited accounts'],
-    donor:['projects','Register a commitment'],
-    province:['projects','Provincial project view'],
-    public:['ngos','Browse NGO directory'],
-    _def:['applications','New MoU application']
-  },
-  quickAction(){
-    const r=ROLE(this.role);
-    let qa=this.QA[this.role]||this.QA._def;
-    if(!canView(r,qa[0])){
-      const ok=MENU.flatMap(g=>g.items.map(i=>i.id)).filter(v=>canView(r,v));
-      qa=[ok[0]||'dashboard','Open '+((VIEW_T[ok[0]]||['workspace'])[0])];
-    }
-    this.nav(qa[0]);
-    toast(qa[1],'Opened from the sidebar quick action.','ok');
-  },
-  toggleRail(){
-    if(window.matchMedia&&window.matchMedia('(max-width:1080px)').matches){
-      toast('Sidebar is a drawer here','Collapsing to an icon rail is available above 1080px wide.','info');
-      return;
-    }
-    const on=document.documentElement.classList.toggle('sb-rail');
-    try{localStorage.setItem('ead-portal-rail',on?'1':'0')}catch(e){}
-    // let ApexCharts re-measure once the width transition settles
-    window.dispatchEvent(new Event('resize'));
-    setTimeout(()=>window.dispatchEvent(new Event('resize')),360);
-  },
-  initRail(){
-    let v=null; try{v=localStorage.getItem('ead-portal-rail')}catch(e){}
-    const wide=!(window.matchMedia&&window.matchMedia('(max-width:1080px)').matches);
-    document.documentElement.classList.toggle('sb-rail',v==='1'&&wide);
-  },
+  role:'secretary', view:'dashboard', charts:[], state:{},
   enter(roleId){
     this.role=roleId||'secretary';
     document.getElementById('auth').classList.remove('on');
@@ -3091,7 +2768,6 @@ const App={
     const allowed=MENU.flatMap(g=>g.items.map(i=>i.id)).filter(v=>canView(r,v));
     if(!allowed.includes(this.view))this.view=allowed[0]||'dashboard';
     this.state={};
-    this.initRail();
     this.renderShell(); this.nav(this.view,true);
     window.scrollTo(0,0);
     toast('Signed in as '+r.short,r.org.replace(/&amp;/g,'&')+' — '+r.desc,'ok');
@@ -3127,11 +2803,6 @@ const App={
       });
     });
     document.getElementById('sb-nav').innerHTML=html;
-    // role-aware quick action
-    const qa=this.QA[this.role]||this.QA._def;
-    const qaL=document.getElementById('sb-qa-l'), qaB=document.getElementById('sb-qa');
-    if(qaL)qaL.textContent=qa[1];
-    if(qaB)qaB.title=qa[1];
     // Sidebar user
     document.getElementById('sb-av').className=av;document.getElementById('sb-av').textContent=ini(r.short);
     document.getElementById('sb-name').textContent=r.short.replace(/&amp;/g,'&');
@@ -3156,7 +2827,6 @@ const App={
         <span class="ic-chip sm" style="--ci:${n.tone==='warn'?'var(--warn)':n.tone==='danger'?'var(--danger)':n.tone==='success'?'var(--success)':'var(--info)'};--ci-bg:${n.tone==='warn'?'var(--warn-bg)':n.tone==='danger'?'var(--danger-bg)':n.tone==='success'?'var(--success-bg)':'var(--info-bg)'};--ci-ln:${n.tone==='warn'?'var(--warn-line)':n.tone==='danger'?'var(--danger-line)':n.tone==='success'?'var(--success-line)':'var(--info-line)'}">${I(n.cat==='auth'?'lock':n.cat==='mou'?'award':n.cat==='clr'?'shield':n.cat==='mne'?'activity':n.cat==='apps'?'file':n.cat==='reports'?'pie':n.cat==='policy'?'book':'bell','',2.2)}</span>
         <span class="tx"><b>${n.title}</b><span>${ago(n.when)}</span></span>
       </div>`).join('');
-    document.getElementById('fy-lbl').textContent=this.fy;
   },
   queueCount(){
     const r=this.role;
@@ -3203,12 +2873,6 @@ const App={
     this.renderShell(); this.nav(this.view);
     toast('Now viewing as '+r.short,r.desc,'info');
   },
-  setFY(fy,el){
-    this.fy=fy; document.getElementById('fy-lbl').textContent=fy;
-    el.parentElement.querySelectorAll('.dd-i').forEach(b=>b.classList.remove('on'));
-    el.classList.add('on'); UI.ddClose();
-    this.nav(this.view); toast('Financial year changed','All figures now reflect '+fy+'.','info');
-  },
   toggleSb(open){
     const sb=document.getElementById('sb'), bk=document.getElementById('sb-bk');
     if(open===undefined)open=!sb.classList.contains('open');
@@ -3235,24 +2899,15 @@ document.addEventListener('click',e=>{if(!e.target.closest('.dd'))UI.ddClose()})
 document.addEventListener('keydown',e=>{
   const inApp=document.getElementById('app').classList.contains('on');
   if(e.key==='Escape'){
-    if(Cmd.isOpen()){Cmd.close();return}
     UI.ddClose();
     if(document.getElementById('ovl').classList.contains('on')){UI.modalClose();return};
     return;
-  }
-  // ⌘K / Ctrl+K — command palette from anywhere inside the app
-  if((e.key==='k'||e.key==='K')&&(e.metaKey||e.ctrlKey)){
-    e.preventDefault(); if(inApp)Cmd.open(); return;
   }
   // Tab is trapped inside an open modal
   if(e.key==='Tab'){
     const ovl=document.getElementById('ovl');
     if(ovl.classList.contains('on'))UI.trap(document.getElementById('ovl-c'),e);
     return;
-  }
-  // "/" — same palette, only when no field has focus
-  if(e.key==='/'&&inApp&&!Cmd.isOpen()&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){
-    e.preventDefault(); Cmd.open();
   }
 });
 
@@ -3604,65 +3259,6 @@ const Spark={
       };
       requestAnimationFrame(step);
     });
-  }
-};
-
-/* ------------------------------------------------------------
-   TABLE TOOLS — injected into every .tbar, so all five data views
-   (and any future one) get density control and CSV export for free.
-   ------------------------------------------------------------ */
-const Tools={
-  KEY:'ead-portal-density',
-  init(){
-    let v=null;try{v=localStorage.getItem(this.KEY)}catch(e){}
-    document.body.classList.toggle('dense',v==='1');
-  },
-  inject(){
-    document.querySelectorAll('#view .tbar').forEach(tb=>{
-      if(tb.querySelector('.tb-tools'))return;
-      const d=document.createElement('div');
-      d.className='tb-tools';
-      d.innerHTML='<button type="button" class="tb-ic tb-dense" onclick="Tools.density()" '
-        +'title="Toggle row density" aria-pressed="false" aria-label="Toggle row density">'+I('list','',2.2)+'</button>'
-        +'<button type="button" class="tb-ic" onclick="Tools.csv(this)" '
-        +'title="Export this table to CSV" aria-label="Export this table to CSV">'+I('dl','',2.2)+'</button>';
-      tb.appendChild(d);
-    });
-    this.sync();
-  },
-  sync(){
-    const on=document.body.classList.contains('dense');
-    document.querySelectorAll('.tb-dense').forEach(b=>b.setAttribute('aria-pressed',on?'true':'false'));
-  },
-  density(){
-    const on=document.body.classList.toggle('dense');
-    try{localStorage.setItem(this.KEY,on?'1':'0')}catch(e){}
-    this.sync();
-    // tables reflow, so let ApexCharts re-measure once the transition settles
-    window.dispatchEvent(new Event('resize'));
-    setTimeout(()=>window.dispatchEvent(new Event('resize')),260);
-    toast(on?'Compact rows':'Comfortable rows','Density preference saved on this device.','info');
-  },
-  csv(btn){
-    const card=btn.closest('.card'); if(!card)return;
-    const tbl=card.querySelector('table.tbl');
-    if(!tbl||!tbl.querySelectorAll('tbody tr').length){toast('Nothing to export','This table has no rows on the current filter.','warn');return}
-    const hd=(card.querySelector('.card-hd h3')||{}).textContent||'';
-    const name=(hd||VIEW_T[App.view][0]||'ead').replace(/&amp;/g,'&')
-      .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'ead-export';
-    const q=t=>{t=(t||'').replace(/\s+/g,' ').trim();return /[",]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
-    const lines=[...tbl.querySelectorAll('tr')]
-      .map(tr=>[...tr.querySelectorAll('th,td')].map(td=>q(td.textContent)).join(','));
-    const csv='\ufeff'+lines.join('\r\n');
-    const fn=name+'-'+App.fy.toLowerCase().replace(/\s+/g,'-')+'.csv';
-    let url='', obj=false;
-    try{url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));obj=true}
-    catch(e){url='data:text/csv;charset=utf-8,'+encodeURIComponent(csv)}
-    const a=document.createElement('a');
-    a.href=url; a.download=fn; a.rel='noopener';
-    document.body.appendChild(a); a.click(); a.remove();
-    if(obj)setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},2000);
-    toast('CSV exported',(lines.length-1)+' data rows written to '+fn+'.','ok');
   }
 };
 
@@ -4499,9 +4095,7 @@ Views.openNgo=function(id){
    ============================================================ */
 Views.analytics=function(){
   let h=P.hdr('Analytics','Portfolio intelligence across applications, funding, clearance and compliance',
-    `<div class="seg"><button class="on">Quarterly</button><button>Half-yearly</button><button>Annual</button></div>
-     <button class="btn btn-ghost" onclick="window.print()">${I('print','',2.2)}Print</button>
-     <button class="btn btn-primary" onclick="App.toast('Export queued','Analytics workbook is being prepared.','info')">${I('dl','',2.2)}Export workbook</button>`);
+    `<button class="btn btn-ghost" onclick="window.print()">${I('print','',2.2)}Print</button>`);
   h+=`<div class="grid g4" style="margin-bottom:16px">${[
     {label:'Application Volume',value:nf(DATA.apps.length*46),icon:'file',delta:12,note:'+12% year on year'},
     {label:'Approval Rate',value:'78.4',unit:'%',icon:'target',delta:4,note:'of decided cases'},
@@ -4550,13 +4144,11 @@ Views.reports=function(){
    ['Quarterly Foreign Contribution Returns','fin','Amounts received and expended as reported by NGOs, with bank reconciliation.','Quarterly','XLSX','5.6 MB'],
    ['Administrative Cost Ratio Analysis','fin','Administrative cost against the 30% policy ceiling, by organisation.','Annual','PDF · XLSX','2.9 MB'],
    ['Overdue Returns &amp; Defaulters List','comp','Organisations with overdue quarterly returns, audits or annual reports.','Weekly','PDF · CSV','1.8 MB'],
-   ['Third-Party Evaluation Summary','comp','Ratings, findings and observations from independent evaluations.','Half-yearly','PDF','4.4 MB'],
    ['Audit Opinion Analysis','comp','Unqualified, qualified, adverse and disclaimer opinions by audit firm.','Annual','PDF · XLSX','3.1 MB'],
    ['Provincial Coverage Report (BGOs)','mgmt','District-wise project distribution shared with provincial end users.','Quarterly','PDF · XLSX','5.2 MB']
   ];
   let h=P.hdr('Reports &amp; Statements','Statutory, management, financial and compliance reporting',
-    `<button class="btn btn-ghost" onclick="window.print()">${I('print','',2.2)}Print</button>
-     <button class="btn btn-primary" onclick="UI.modal(Views.repBuilder(),'wide')">${I('plus','',2.2)}Build custom report</button>`);
+    `<button class="btn btn-ghost" onclick="window.print()">${I('print','',2.2)}Print</button>`);
   h+=`<div class="grid g-2-1" style="margin-bottom:16px">${P.chartPanel('c-rp1','Report generation by category','Last six months','md')}${P.chartPanel('c-rp2','Top downloads','Most requested statements','md')}</div>`;
   h+=`<div class="card"><div class="tbar">
     <div class="chips">${['all',...cats.map(c=>c[1])].map(k=>`<button class="chip ${k==='all'?'on':''}" onclick="UI.toast('Filtered','Report list filtered.','info')">${k==='all'?'All':(cats.find(c=>c[1]===k)||['','All'])[0]}<span class="ct">${k==='all'?R.length:R.filter(r=>r[1]===k).length}</span></button>`).join('')}</div>
@@ -4571,22 +4163,6 @@ Views.reports=function(){
     </tbody></table></div></div>`;
   return h;
 };
-Views.repBuilder=function(){
-  return `${UI.mdlHd('plus','Build a custom report','Select the dataset, period, grouping and output format')}
-  <div class="mdl-bd">
-    <div class="f2"><div class="fld"><label>Dataset <span class="req">*</span></label><select class="sel"><option>MoU Applications</option><option>MoU Register</option><option>NGO Directory</option><option>Projects (APA)</option><option>Donors &amp; Commitments</option><option>Quarterly Returns</option><option>Audit Reports</option><option>Security Clearances</option></select></div>
-      <div class="fld"><label>Financial Year <span class="req">*</span></label><select class="sel"><option>FY 2023-24</option><option>FY 2024-25</option><option selected>FY 2025-26</option></select></div></div>
-    <div class="f2 mt12"><div class="fld"><label>Group by</label><select class="sel"><option>Donor</option><option>Province</option><option>Thematic area</option><option>Organisation</option><option>Wing / officer</option><option>None</option></select></div>
-      <div class="fld"><label>Sort by</label><select class="sel"><option>Amount (descending)</option><option>Date (newest first)</option><option>Organisation name</option><option>Status</option></select></div></div>
-    <div class="fld mt12"><label>Filters</label>
-      <div class="chips mt8">${['MoU Active','Ongoing projects','Committed > $1M','Overdue returns','Adverse clearance'].map((f,i)=>`<button class="chip ${i<2?'on':''}" onclick="this.classList.toggle('on')">${f}</button>`).join('')}</div></div>
-    <div class="fld mt12"><label>Output format <span class="req">*</span></label>
-      <div class="role-grid mt8">${[['PDF','Formatted statement'],['XLSX','Spreadsheet'],['CSV','Raw data'],['Print','Browser print view']].map((f,i)=>`
-        <button class="role-opt ${i?'':'on'}" onclick="Views._clrSel(this)"><span class="ic-chip sm">${I(f[0]==='PDF'?'file':f[0]==='XLSX'?'list':f[0]==='CSV'?'hash':'print','',2.2)}</span><span class="tx"><b>${f[0]}</b><span>${f[1]}</span></span></button>`).join('')}</div></div>
-  </div><div class="mdl-ft"><button class="btn btn-ghost" onclick="UI.modalClose()">Cancel</button>
-    <button class="btn btn-primary" onclick="UI.modalClose();UI.toast('Report queued','Your custom report will be emailed when ready.','ok')">${I('bar','',2.2)}Generate report</button></div>`;
-};
-
 /* ============================================================
    NOTIFICATIONS
    ============================================================ */
@@ -5267,7 +4843,7 @@ Object.keys(VIEW_T).forEach(k=>{AfterRender[k]=function(){
     try{const c=new ApexCharts(el,f());const pr=c.render();if(pr&&pr.catch)pr.catch(()=>{});App.charts.push(c)}
     catch(e){console.warn('chart '+el.id,e)}
   });
-  Spark.mount(); Spark.count(document.getElementById('view')); Tools.inject();
+  Spark.mount(); Spark.count(document.getElementById('view'));
 }});
 
 /* pagination wiring */
@@ -5286,7 +4862,6 @@ document.addEventListener('click',e=>{
    ============================================================ */
 (function init(){
   Theme.init();
-  Tools.init();
   UI.syncExpanded();
   Auth.init();
   Auth._paintPanels();

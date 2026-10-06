@@ -9,10 +9,10 @@
 #
 #   1. node --check      syntax of the inlined application script
 #   2. headless-suite    129 role x view renders, both themes, 50 chart builders,
-#                        every modal / auth flow / filter / sort / tab, the command
-#                        palette, the rail sidebar, and a computed font-size sweep
-#   3. overlap-audit     geometric proof that no layer overlaps (49 checks)
-#   4. login-height      the login screen's no-scroll height budget (15 viewports)
+#                        every modal / auth flow / filter / sort / tab, the compact
+#                        sidebar/search shell, removed-action assertions, and font sweep
+#   3. overlap-audit     geometric proof that no layer overlaps (55 checks)
+#   4. login-height      the login screen's no-scroll height budget (14 viewports)
 #   5. markup-balance    tag balance, duplicate ids, structural assertions
 #
 # Note: ApexCharts cannot render in jsdom (no layout engine, no getBBox), so chart

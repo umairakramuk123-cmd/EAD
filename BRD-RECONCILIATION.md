@@ -9,8 +9,8 @@ Provenance key:
 |---|---|
 | `[GUIDE]` | traceable to the official *EAD e-Portal Registration Procedure Guide* |
 | `[POLICY]` | traceable to the *NGO Policy 2021/2022* on ngo.ead.gov.pk |
-| `[INFERRED]` | plausible enterprise design added by me, **not** sourced from an EAD document |
-| `[UI-EXTRA]` | added in v3–v5 as interface enhancement, not domain functionality |
+| `[INFERRED]` | a role, module, action or behavior not specified by either public EAD source |
+| `[UI-EXTRA]` | interface enhancement added in the portal rather than sourced from an EAD document |
 
 ---
 
@@ -19,8 +19,8 @@ Provenance key:
 The upload notification named `/home/user/uploads/EAD- Updated BRD 1.1 (1) (1).pdf`.
 That path does not exist, and a whole-filesystem search for `*.pdf` and `*BRD*` returns
 nothing. `pdftotext`, `mutool`, `gs`, `qpdf`, `pypdf`, `PyPDF2`, `fitz`, `pdfminer` and
-`pdfplumber` are all absent, and `pip install pypdf` is blocked by PEP 668. This is the
-second attempt that has not landed.
+`pdfplumber` are all absent, and `pip install pypdf` is blocked by PEP 668. Three upload
+notifications have now failed to produce the file in this workspace.
 
 Everything below is therefore reconciled against the two public EAD sources, not the BRD.
 
@@ -34,7 +34,7 @@ Everything below is therefore reconciled against the two public EAD sources, not
 | `secretary` | Secretary, EAD | `[POLICY]` — competent approving authority |
 | `addl_secretary` | Additional Secretary, NGO Wing | `[INFERRED]` — policy names Secretary and one BS-20 officer only |
 | `joint_secretary` | Joint Secretary, NGO Wing-I | `[GUIDE]` — signs the MoU "For the Government of the Islamic Republic of Pakistan" |
-| `section_officer` | Section Officer, Scrutiny | `[POLICY]` — "scrutinized by an authorized officer" |
+| `section_officer` | Section Officer, Scrutiny | `[INFERRED]` — policy says "authorized officer" but does not name this rank |
 | `desk_officer` | Desk Officer / DEO, Record & Receipt | `[INFERRED]` |
 | `ngo_admin` | NGO Administrator | `[GUIDE]` — the registering NGO user |
 | `ngo_pm` | NGO Project Manager | `[INFERRED]` — Guide mentions project staff, not a portal role |
@@ -42,9 +42,9 @@ Everything below is therefore reconciled against the two public EAD sources, not
 | `province` | Provincial Government (BGO) | `[POLICY]` — provinces are processing end users of the BGOs portal |
 | `moi` | Security Agency (MoI) | `[POLICY]` — provisional security-agency clearance |
 | `auditor` | External Auditor | `[INFERRED]` — policy requires audited accounts *from* a firm, not a portal login |
-| `public` | Public / Visitor | `[GUIDE]` — Track Your Application, FAQs, NGOs Information are public |
+| `public` | Public / Visitor | `[INFERRED]` — public pages exist, but the source does not define a public login role |
 
-**6 of 13 roles are my inference.** This is the single largest BRD-dependency in the build.
+**8 of 13 portal roles are my inference.** This is the largest BRD-dependency in the build.
 
 ## Modules (16)
 
@@ -85,9 +85,10 @@ Press Releases · NGOs Information · NGOs Policy 2021 · Guidelines.
 | Request security clearance; agency grants/withholds | `[POLICY]` |
 | Sign MoU (6 months, extendable to 2 years) | `[POLICY]` |
 | Renew MoU (≤ 2 years, decided at Secretary level) | `[POLICY]` |
-| **Revoke** a MoU | `[INFERRED]` — neither source describes revocation, only non-extension |
+| Revoke a user invitation or session; deactivate an account | `[INFERRED]` — account-management actions are present in the portal but not described in either source |
 | Submit quarterly foreign-contribution return | `[POLICY]` |
-| Submit annual / half-yearly return | `[INFERRED]` — policy specifies quarterly and annual only |
+| Submit an annual project report | `[POLICY]` — not a separate annual foreign-contribution return |
+| Submit a half-yearly return | `[INFERRED]` — not specified by policy; the frequency option was removed in v6 |
 | Upload audited accounts | `[POLICY]` |
 | Upload annual report / completion report | `[POLICY]` |
 | Add or edit a project (APA) | `[GUIDE]` — additional projects must be submitted via e-portal |
@@ -96,21 +97,25 @@ Press Releases · NGOs Information · NGOs Policy 2021 · Guidelines.
 | Broadcast a notification; send reminders | `[INFERRED]` |
 | Build a report | `[INFERRED]` |
 
-## UI-layer additions (v3–v5) — no domain meaning
+## Added controls and behaviors — current v6 status
 
-| Feature | Added | Reversible |
+| Feature/action | Introduced | Current status |
 |---|---|---|
-| Command palette (⌘K / Ctrl+K / `/`) | v3 | yes — remove `Cmd`, the `.cmdk` trigger and `#cmdk-ovl` |
-| CSV export per table | v4 | yes — remove `Tools.csv` |
-| Row-density toggle | v4 | yes — remove `Tools.density` |
-| Sidebar collapse to icon rail | v3 | yes — remove `App.toggleRail` and the `.sb-collapse` button |
-| Role-aware sidebar quick action | v3 | yes — remove `.sb-qa` |
-| Live demo role switcher | v1 | yes — remove `#dd-role`; role would come from the account |
-| Financial-year selector | v1 | yes — remove `#dd-fy` |
-| Print current view | v1 | yes — remove the palette command and the `@media print` block |
-| KPI sparklines + count-up | v4 | yes — remove `.kpi-spark` and `Spark` |
-| Glassmorphism, light/dark themes, elevation scale | v2/v5 | explicitly requested by the client |
-| Redesigned login, zero vertical scroll | v2 | explicitly requested by the client |
+| Command palette and its theme/rail/FY/refresh/print commands | v3 | **Removed** |
+| Per-table CSV export | v4 | **Removed** |
+| Per-table row-density toggle | v4 | **Removed** |
+| Sidebar collapse to icon rail | v3 | **Removed**; floating full-width sidebar remains |
+| Role-aware sidebar quick action | v3 | **Removed** |
+| Financial-year selector | v1 | **Removed**; date labels in sample data remain |
+| Fake "refresh" toast button | v1/v3 | **Removed** |
+| Custom report builder / queued workbook export | v1/v4 | **Removed** |
+| Half-yearly return frequency | v1 | **Removed**; quarterly and annual source-backed reporting remains |
+| Third-party evaluation summary report row | v1 | **Removed**; other third-party/beneficiary details require BRD confirmation |
+| Print buttons and `@media print` styling | v1 | **Still present**; BRD status unknown |
+| Demo role switcher | v1 | **Still present**; needed to inspect all 13 workspaces in this prototype |
+| KPI sparklines + count-up | v4 | **Still present**; visual/data presentation only |
+| Glassmorphism, light/dark themes, elevation scale | v2/v5 | **Retained** per the client's explicit design requests |
+| Redesigned login, zero vertical scroll | v2 | **Retained** per the client's explicit design request |
 
 ## Domain rules already encoded (all sourced)
 

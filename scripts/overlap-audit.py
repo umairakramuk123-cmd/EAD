@@ -82,43 +82,34 @@ print('=' * 74)
 # ------------------------------------------------------------------- 1 tokens
 tok = dict(re.findall(r'(--[a-z0-9-]+)\s*:\s*([^;]+);', CSS))
 SB_W   = px(tok.get('--sb-w', '0px').strip())
-SB_RAIL= px(tok.get('--sb-rail', '0px').strip())
 SB_GUT = px(tok.get('--sb-gut', '0px').strip())
 TB_H   = px(tok.get('--tb-h', '0px').strip())
 print('\n1. TOKENS')
-check(SB_W > 0 and SB_RAIL > 0 and SB_GUT > 0 and TB_H > 0,
+check(SB_W > 0 and SB_GUT > 0 and TB_H > 0,
       'geometry tokens resolve',
-      '--sb-w=%g  --sb-rail=%g  --sb-gut=%g  --tb-h=%g' % (SB_W, SB_RAIL, SB_GUT, TB_H))
-check(SB_RAIL < SB_W, 'rail is narrower than the expanded sidebar')
+      '--sb-w=%g  --sb-gut=%g  --tb-h=%g' % (SB_W, SB_GUT, TB_H))
 
 # --------------------------------------------- 2 sidebar vs main gutter
 print('\n2. SIDEBAR  vs  MAIN CONTENT COLUMN')
 sb   = rule('.sb'); main = rule('.main')
 check(sb.get('position') == 'fixed', 'sidebar is position:fixed')
 check(sb.get('left') == 'var(--sb-gut)', 'sidebar offset from the left edge by the gutter', sb.get('left',''))
-rail_main = rule('.main', '(max-width:1080px)')
-for label, w, ml in (
-        ('expanded', SB_W,   'calc(var(--sb-w) + var(--sb-gut) * 2)'),
-        ('rail',     SB_RAIL,'calc(var(--sb-rail) + var(--sb-gut) * 2)')):
-    if label == 'rail':
-        check(rule('html.sb-rail .sb').get('width') == 'var(--sb-rail)', 'rail width rule present')
-        check(rule('html.sb-rail .main').get('margin-left') == ml, 'rail main margin rule present')
-    else:
-        check(main.get('margin-left') == ml, 'expanded main margin rule present', main.get('margin-left',''))
-    right_edge = SB_GUT + w                 # gutter + sidebar width
-    content_left = w + SB_GUT * 2           # what margin-left resolves to
-    gap = content_left - right_edge
-    check(gap >= SB_GUT - 0.01,
-          '%s: sidebar right edge %gpx < content left edge %gpx  (clear gap %gpx)'
-          % (label, right_edge, content_left, gap))
+ml = 'calc(var(--sb-w) + var(--sb-gut) * 2)'
+check(main.get('margin-left') == ml, 'expanded main margin rule present', main.get('margin-left',''))
+right_edge = SB_GUT + SB_W
+content_left = SB_W + SB_GUT * 2
+clear_gap = content_left - right_edge
+check(clear_gap >= SB_GUT - 0.01,
+      'expanded: sidebar right edge %gpx < content left edge %gpx (clear gap %gpx)'
+      % (right_edge, content_left, clear_gap))
 
 # drawer mode must release the gutter entirely
 check(rule('.main', '(max-width:1080px)').get('margin-left') == '0',
       'drawer mode: main column margin released to 0')
-check(rule('html.sb-rail .main', '(max-width:1080px)').get('margin-left') == '0',
-      'drawer mode: rail margin also released to 0')
 check('translateX' in rule('.sb', '(max-width:1080px)').get('transform', ''),
       'drawer mode: sidebar parked fully off-screen')
+check(not re.search(r'html\.sb-rail|--sb-rail', CSS),
+      'removed rail mode leaves no stale CSS references')
 
 # ------------------------------------------------------- 3 topbar fits
 print('\n3. TOPBAR MINIMUM CONTENT WIDTH  (must never overflow its column)')
@@ -127,37 +118,44 @@ TB_PAD = 2 * px((tb.get('padding', '0 16px').split() or ['0'])[-1])
 TB_GAP = px(tb.get('gap'), 9)
 check(rule('.crumb').get('min-width') == '0', 'crumb can shrink to zero (min-width:0)')
 check(rule('.crumb').get('overflow') == 'hidden', 'crumb clips rather than pushing siblings')
-check(rule('.cmdk').get('min-width') == '0', 'command trigger can shrink to zero')
+check(rule('.tb-search').get('min-width') == '0', 'record search can shrink to zero')
+check(rule('.tb-search input').get('min-width') == '0', 'record-search input can shrink to zero')
+check(rule('.tb-search .go').get('flex') == 'none', 'search submit button keeps a stable width')
+check(rule('.tb-search .go', '(max-width:960px)').get('display') == 'none',
+      'search submit label hides below 960px to protect the mobile topbar')
 check(rule('.rolepick').get('min-width') == '0', 'role picker can shrink to zero')
 check(rule('.tb-act').get('flex') == 'none' or 'none' in rule('.tb-act').get('flex',''),
       'right-hand cluster does not flex')
 
-BTN, THM = 35, 35
-CMDK_ICON = px(rule('.cmdk', '(max-width:960px)').get('width'), 36) or 36
+BTN = 35
+SEARCH_ICON_ONLY = 43    # icon + one gap + horizontal padding + borders; input is min-width:0
+SEARCH_WITH_BUTTON = 115 # icon + two gaps + submit button + padding/borders; input can shrink
+ROLE_MIN = 67            # avatar + chevron + gaps + padding; label is allowed to shrink
 
 def topbar_min(vw):
-    """Sum of non-shrinkable widths + gaps + padding for a given viewport width."""
+    """Conservative minimum for the actual compact shell at each breakpoint."""
     drawer = vw <= 1080
     items = []
     if drawer: items.append(('menu', BTN))
-    # .crumb shrinks to 0, contributes nothing to the minimum
-    if vw <= 960: items.append(('cmdk', CMDK_ICON))
-    else:         items.append(('cmdk', 0))          # flex:1 1 auto, min-width:0
-    act = []
-    act.append(('fy',  BTN if vw <= 1160 else 136))   # icon + 'FY 2025-26' + caret
-    act.append(('thm', THM))
-    if vw > 960: act.append(('refresh', BTN))
-    act.append(('bell', BTN))
-    act.append(('role', 35 if vw <= 560 else 47))    # text hidden <=560, else shrinkable
-    if vw > 560: act.append(('me', BTN))
-    act_w = sum(w for _, w in act) + TB_GAP * max(0, len(act) - 1)
+    # Breadcrumb is min-width:0 and overflow:hidden, so it contributes no minimum.
+    search = SEARCH_ICON_ONLY if vw <= 960 else SEARCH_WITH_BUTTON
+    items.append(('search', search))
+    act = [('theme',35), ('bell',BTN)]
+    if vw <= 560:
+        act.append(('role',35))       # label hidden, fixed 35px icon target
+    else:
+        act.append(('role',ROLE_MIN))
+        act.append(('profile',BTN))   # hidden at <=560px
+    act_w = sum(w for _,w in act) + 9*max(0,len(act)-1)
     items.append(('tb-act', act_w))
-    total = TB_PAD + sum(w for _, w in items) + TB_GAP * max(0, len(items) - 1)
-    return total, [n for n, w in items + act if w]
+    # One flex gap remains between each actual topbar child; crumb itself can collapse.
+    gaps = 9 * (3 if drawer else 2)
+    total = 32 + sum(w for _,w in items) + gaps  # 16px padding per side
+    return total, [n for n,w in items if w] + [n for n,w in act if w]
 
-print('   %-8s %-12s %-12s %-8s %s' % ('vw', 'topbar min', 'available', 'slack', 'visible'))
+print('   %-8s %-12s %-12s %-8s %s' % ('vw', 'topbar min', 'available', 'slack', 'minimum controls'))
 ok_all = True
-for vw in (320, 360, 390, 430, 560, 640, 768, 960, 1024, 1080, 1160, 1280, 1366, 1440, 1600, 1920):
+for vw in (320, 360, 390, 430, 560, 561, 640, 768, 960, 961, 1024, 1080, 1081, 1160, 1280, 1366, 1440, 1600, 1920):
     need, vis = topbar_min(vw)
     avail = vw - (0 if vw <= 1080 else SB_W + SB_GUT * 2)
     ok = need <= avail; ok_all &= ok
@@ -179,7 +177,6 @@ STACK = [('body::before', None, 'ambient aurora', -2),
          ('.sb',          None, 'sidebar', 80),
          ('.ovl',         None, 'modal', 200),
          ('.drw',         None, 'side drawer', 201),
-         ('.cmdk-ovl',    None, 'command palette', 250),
          ('#toasts',      None, 'toasts', 400),
          ('.skip',        None, 'skip link', 500)]
 found = []
@@ -190,10 +187,10 @@ for sel, media, name, want in STACK:
           'expected %d' % want if got != want else '')
 levels = [g for _, g, _ in found if g is not None]
 check(len(levels) == len(set(levels)), 'no two shell layers share a z-index level')
-check(levels == sorted(levels), 'stack order ascends: ambient < head < topbar < drawer < sidebar < modal < palette < toasts < skip link')
+check(levels == sorted(levels), 'stack order ascends: ambient < head < topbar < drawer < sidebar < modal < toasts < skip link')
 # the context menu is set from JS, not CSS
 check('z-index:300' in S,
-      'context menu sits at 300 (above palette, below toasts)')
+      'context menu sits at 300 (above modal/drawer, below toasts)')
 
 # ------------------------------------------------------------- 5 sticky heads
 print('\n5. STICKY TABLE HEAD vs STICKY TOPBAR')
@@ -253,10 +250,13 @@ check('min(' in NOSCRIPT[NOSCRIPT.index('id="dd-bell"'):NOSCRIPT.index('id="dd-b
 drw = rule('.drw')
 check('min(' in drw.get('width', ''), 'side drawer width is viewport-clamped', drw.get('width',''))
 check('min(' in rule('#toasts').get('max-width', ''), 'toasts are viewport-clamped', rule('#toasts').get('max-width',''))
-check(rule('.cmdk-pnl') and 'min(' in rule('.cmdk-pnl').get('width',''),
-      'command palette panel is viewport-clamped', rule('.cmdk-pnl').get('width',''))
-check(int(rule('.cmdk-ovl').get('z-index','0')) > int(rule('.drw').get('z-index','0')),
-      'command palette renders above the modal and drawer')
+check(rule('.tb-search').get('flex') == '1 1 auto',
+      'record search flexes between breadcrumb and account controls', rule('.tb-search').get('flex',''))
+check(rule('.tb-search input').get('min-width') == '0',
+      'record-search input may shrink without pushing controls off-screen')
+STATIC_MARKUP = re.sub(r'<style\b[^>]*>.*?</style>', '', NOSCRIPT, flags=re.S)
+check(not re.search(r'\.cmdk|cmdk-ovl|\.tb-tools|\.tb-ic|\.fy-pick|dd-fy', CSS + STATIC_MARKUP),
+      'removed optional shell actions leave no CSS/markup remnants')
 
 # ------------------------------------------------------- 8 type-scale guard
 print('\n8. TYPE SCALE (13px minimum, 16px maximum — hard client constraint)')
