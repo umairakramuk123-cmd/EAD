@@ -1221,8 +1221,11 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
 .lg-demo .sel{height:32px;font-size:var(--fs-13);padding-right:28px;background-position:right 8px center}
 .lg-foot{
   position:relative;z-index:2;flex:none;padding:0 22px 13px;display:flex;gap:11px;justify-content:center;
-  align-items:center;flex-wrap:wrap;font-size:var(--fs-13);color:var(--ink-400);font-weight:600;text-align:center;
+  align-items:center;flex-wrap:nowrap;overflow:hidden;font-size:var(--fs-13);
+  color:var(--ink-400);font-weight:600;text-align:center;white-space:nowrap;
 }
+/* nowrap keeps the footer's height constant, so it can never grow the login chrome */
+@media(max-width:860px){.lg-foot a,.lg-foot .sep{display:none}}
 .lg-foot .sep{width:1px;height:12px;background:var(--line)}
 .lg-foot a{color:var(--ink-500)}
 
@@ -1253,11 +1256,13 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
   .lg-side h1{font-size:22px}
   .lg-top{height:50px}
   .lg-stage{padding:12px 20px}
-  .lg-card{max-height:calc(100dvh - 96px)}
+  .lg-card{max-height:calc(100dvh - 112px)}
+  .lg-demo{padding:6px 9px;margin-top:10px}
+  .lg-actions{margin-top:10px}
 }
 @media(max-height:680px){.lg-alt{display:none}}
 /* Landscape-phone territory: compact every control so the pane still fits */
-@media(max-height:620px){
+@media(max-height:660px){
   .lg-form{padding:16px 20px}
   .lg-inp{height:36px}
   .captcha .box{height:34px;width:96px}
@@ -1274,7 +1279,9 @@ html[data-screen="login"] #auth{min-height:0;height:100dvh}
   .lg-form{padding:20px 18px}
   .lg-actions{flex-direction:column}
   .lg-actions .btn{width:100%}
-  .lg-foot .sep,.lg-foot span:nth-child(n+3){display:none}
+  /* keep the footer to a single line so its height can never grow the chrome */
+  .lg-foot{gap:0}
+  .lg-foot .sep,.lg-foot a,.lg-foot span:nth-child(n+3){display:none}
 }
 </style>
 </head>

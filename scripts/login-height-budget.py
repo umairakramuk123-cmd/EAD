@@ -71,13 +71,13 @@ def rule(sel,medias):
     if not d: raise KeyError(sel)
     return d
 
-M780,M700,M680,M620='(max-height:780px)','(max-height:700px)','(max-height:680px)','(max-height:620px)'
+M780,M700,M680,M660='(max-height:780px)','(max-height:700px)','(max-height:680px)','(max-height:660px)'
 print('%-6s %-9s %-9s %-9s %s'%('VP','content','available','slack','verdict'))
 print('-'*62)
 allok=True
-for VP in (1080,900,860,800,768,740,720,700,680,667,640,620,600):
+for VP in (1080,960,900,860,800,768,740,720,700,680,667,640,620,600):
     m780=VP<=780; m700=VP<=700; m660=VP<=680
-    meds=[x for x,c in ((M780,m780),(M700,m700),(M680,m660),(M620,VP<=620)) if c]
+    meds=[x for x,c in ((M780,m780),(M700,m700),(M680,VP<=680),(M660,VP<=660)) if c]
     F=rule('.lg-form',meds)
     padv=F.get('padding','26px 30px').split(); pad=2*px(padv[0])
     parts=[('padding y',pad)]
@@ -121,10 +121,24 @@ for VP in (1080,900,860,800,768,740,720,700,680,667,640,620,600):
     parts.append(('demo',selh+2*px(dv[0])+borders(de)+px(de.get('margin-top'),13)))
 
     tot=sum(v for _,v in parts)
-    avail=VP-(96 if m700 else 108)
+    # ---- chrome: .lg-top + .lg-stage padding + .lg-foot ----
+    top=rule('.lg-top',meds)
+    stg=rule('.lg-stage',meds); sv=stg.get('padding','0 22px 14px').split()
+    sty=px(sv[0]) if len(sv)==1 else (px(sv[0]) if len(sv)>=3 else 0.0)
+    stb=px(sv[0]) if len(sv)==1 else (px(sv[0]) if len(sv)==3 else px(sv[-1]))
+    if len(sv)==4: sty,stb=px(sv[0]),px(sv[2])
+    elif len(sv)==3: sty,stb=px(sv[0]),px(sv[2])
+    elif len(sv)==2: sty,stb=px(sv[0]),px(sv[0])
+    else: sty,stb=0.0,px(sv[0])
+    ft=rule('.lg-foot',meds); fv=ft.get('padding','0 22px 13px').split()
+    ftb=px(fv[-1]) if len(fv)>=3 else px(fv[0])
+    fth=ftb+ln(ft,fsz(ft,13))
+    chrome=px(top.get('height'),56)+sty+stb+fth
+    parts.append(('-- chrome --',chrome))
+    avail=VP-chrome
     ok=tot<=avail; allok&=ok
-    print('%-6d %-9.0f %-9d %-9.0f %s'%(VP,tot,avail,avail-tot,'FITS - no vertical scroll' if ok else 'form pane scrolls internally'))
-    if VP==900:
+    print('%-6d %-9.0f %-9.1f %-9.1f %s'%(VP,tot,avail,avail-tot,'FITS - no vertical scroll' if ok else 'form pane scrolls internally'))
+    if VP in (900,640):
         print('   breakdown:');  [print('      %-16s %6.1f'%(n,v)) for n,v in parts]
 print()
 print('PAGE-LEVEL LOCK  html[data-screen="login"], body  -> height:100dvh; overflow:hidden :',

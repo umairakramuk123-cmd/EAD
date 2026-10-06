@@ -22,7 +22,7 @@ networks that block CDNs — which matters for government deployments behind res
 | | |
 |---|---|
 | File | `ead-portal.html` |
-| Size | ~999 KB |
+| Size | ~1.0 MB |
 | External requests | 0 |
 | Font | Manrope only, 400/500/600/700/800 |
 | Type scale | Hard-constrained to 13–16 px (13 / 14 / 15 / 16 only) |
@@ -106,15 +106,21 @@ divider at ≤ 680 px, and compact every control at ≤ 620 px.
 
 The height budget was computed from the shipped CSS rather than eyeballed:
 
-| Viewport height | Form content | Available | Result |
-|---|---|---|---|
-| 1080 px | 630 px | 972 px | fits |
-| 900 px (1440 × 900) | 630 px | 792 px | fits |
-| 800 px (1280 × 800) | 630 px | 692 px | fits |
-| 768 px (1366 × 768 / 1024 × 768) | 580 px | 660 px | fits |
-| 700 px | 580 px | 604 px | fits |
-| 640 px | 533 px | 544 px | fits |
-| 600 px | 489 px | 504 px | fits |
+| Viewport height | Form content | Available | Slack | Result |
+|---|---|---|---|---|
+| 1080 px | 630 px | 977 px | 347 px | fits |
+| 900 px (1440 × 900) | 630 px | 797 px | 167 px | fits |
+| 800 px (1280 × 800) | 630 px | 697 px | 67 px | fits |
+| 768 px (1366 × 768 / 1024 × 768) | 580 px | 665 px | 85 px | fits |
+| 720 px (1280 × 720) | 580 px | 617 px | 37 px | fits |
+| 700 px | 575 px | 593 px | 18 px | fits |
+| 667 px | 528 px | 560 px | 32 px | fits |
+| 640 px | 489 px | 533 px | 44 px | fits |
+| 600 px | 489 px | 493 px | 4 px | fits |
+
+"Available" is the viewport minus the *actual* chrome height read back out of the shipped CSS
+(`.lg-top` + `.lg-stage` padding + `.lg-foot`), not an estimate. `.lg-foot` is `flex-wrap:nowrap`
+with `overflow:hidden` so its height is constant and it can never grow the chrome.
 
 Below 980 px wide the card collapses to a single column and the brand pane is hidden, so phones get
 the form only.
